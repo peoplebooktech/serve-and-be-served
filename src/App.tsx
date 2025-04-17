@@ -10,7 +10,11 @@ import HowItWorks from "./pages/HowItWorks";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
+// Create a client
 const queryClient = new QueryClient();
+
+// Define Peoplebook.ai color theme
+import "./index.css";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

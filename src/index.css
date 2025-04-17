@@ -101,25 +101,51 @@
 
 .hero-gradient {
   background: linear-gradient(
-    120deg,
-    rgba(155, 135, 245, 0.15) 0%,
-    rgba(14, 165, 233, 0.1) 100%
+    to right,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(245, 245, 255, 0.9) 50%,
+    rgba(235, 235, 255, 0.8) 100%
   );
 }
 
 .footer-gradient {
   background: linear-gradient(
-    120deg,
-    rgba(155, 135, 245, 0.10) 0%,
-    rgba(14, 165, 233, 0.05) 100%
+    to right,
+    rgba(248, 250, 252, 1) 0%,
+    rgba(241, 245, 249, 0.95) 100%
   );
 }
 
 .role-card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 12px;
 }
 
 .role-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(155, 135, 245, 0.2);
+  box-shadow: 0 10px 25px rgba(100, 116, 139, 0.1);
+}
+
+.testimonial-gradient {
+  background: linear-gradient(
+    135deg,
+    rgba(249, 250, 251, 1) 0%,
+    rgba(248, 250, 252, 0.8) 100%
+  );
+}
+
+.btn-primary {
+  @apply bg-peoplebook-blue text-white hover:bg-peoplebook-blue/90 transition-colors;
+}
+
+.btn-outline {
+  @apply bg-white text-peoplebook-blue border border-peoplebook-blue hover:bg-slate-50 transition-colors;
+}
+
+.section-header {
+  @apply text-3xl font-bold mb-4 text-peoplebook-text;
+}
+
+.section-description {
+  @apply text-slate-600 max-w-2xl mx-auto;
 }
