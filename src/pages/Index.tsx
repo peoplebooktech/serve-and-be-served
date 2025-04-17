@@ -1,10 +1,11 @@
 
-import { BrainCircuit, Users, Lightbulb, BarChart3, HandHeart, GraduationCap } from "lucide-react";
+import { BrainCircuit, Users, Lightbulb, BarChart3, HandHeart, GraduationCap, BookOpen, Stethoscope, Leaf, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import RoleCard from "@/components/RoleCard";
+import VerticalCard from "@/components/VerticalCard";
 import { Link } from "react-router-dom";
 
 const Index = () => {
@@ -47,6 +48,56 @@ const Index = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Verticals Section */}
+      <section className="py-16 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="section-header">Our Verticals</h2>
+            <p className="section-description">
+              Peoplebook.ai focuses on four key verticals where non-formal education and collaboration can make the biggest impact.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-8">
+            <VerticalCard 
+              title="Education"
+              description="Transforming learning experiences through peer-to-peer knowledge sharing and mentorship"
+              icon={<BookOpen className="w-8 h-8" />}
+              bgColor="bg-indigo-50"
+              textColor="text-peoplebook-education"
+              linkTo="/education"
+            />
+            
+            <VerticalCard 
+              title="Healthcare"
+              description="Improving access to healthcare knowledge and resources through collaboration"
+              icon={<Stethoscope className="w-8 h-8" />}
+              bgColor="bg-cyan-50"
+              textColor="text-peoplebook-healthcare"
+              linkTo="/healthcare"
+            />
+            
+            <VerticalCard 
+              title="Agriculture"
+              description="Connecting farmers with experts to enhance sustainable agricultural practices"
+              icon={<Leaf className="w-8 h-8" />}
+              bgColor="bg-green-50"
+              textColor="text-peoplebook-agriculture"
+              linkTo="/agriculture"
+            />
+            
+            <VerticalCard 
+              title="Sports"
+              description="Building athletic communities through coaching, training, and performance enhancement"
+              icon={<Trophy className="w-8 h-8" />}
+              bgColor="bg-amber-50"
+              textColor="text-peoplebook-sports"
+              linkTo="/sports"
+            />
           </div>
         </div>
       </section>

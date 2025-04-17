@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -70,7 +71,11 @@ export default {
 					green: '#F2FCE2',
 					yellow: '#FEF7CD',
 					orange: '#FEC6A1',
-					text: '#1A1A1A'
+					text: '#1A1A1A',
+					education: '#4F46E5', // Indigo for Education
+					healthcare: '#06B6D4', // Cyan for Healthcare
+					agriculture: '#22C55E', // Green for Agriculture
+					sports: '#F59E0B'  // Amber for Sports
 				}
 			},
 			borderRadius: {
