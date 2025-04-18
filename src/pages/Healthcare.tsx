@@ -1,5 +1,4 @@
-
-import { Stethoscope, Heart, Activity, FirstAid } from "lucide-react";
+import { Stethoscope, Heart, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -40,7 +39,7 @@ const Healthcare = () => {
               </div>
               
               <div className="flex flex-col items-center text-center p-6 bg-white rounded-lg shadow-sm">
-                <FirstAid className="w-12 h-12 text-peoplebook-healthcare mb-4" />
+                <Stethoscope className="w-12 h-12 text-peoplebook-healthcare mb-4" />
                 <h3 className="text-xl font-semibold mb-2">Healthcare Training</h3>
                 <p className="text-slate-600">Facilitate training and knowledge sharing among healthcare professionals across different specialties.</p>
               </div>
