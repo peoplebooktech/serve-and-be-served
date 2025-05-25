@@ -95,16 +95,19 @@
   }
 }
 
+/* Enhanced Gradients */
 .gradient-text {
-  @apply bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue text-transparent bg-clip-text;
+  @apply bg-gradient-to-r from-peoplebook-purple via-peoplebook-blue to-peoplebook-green text-transparent bg-clip-text;
 }
 
 .hero-gradient {
   background: linear-gradient(
-    to right,
+    135deg,
     rgba(255, 255, 255, 1) 0%,
-    rgba(245, 245, 255, 0.9) 50%,
-    rgba(235, 235, 255, 0.8) 100%
+    rgba(245, 245, 255, 0.95) 25%,
+    rgba(235, 235, 255, 0.9) 50%,
+    rgba(225, 225, 255, 0.85) 75%,
+    rgba(215, 215, 255, 0.8) 100%
   );
 }
 
@@ -116,36 +119,84 @@
   );
 }
 
-.role-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border-radius: 12px;
+/* Enhanced Card Animations */
+.role-card, .vertical-card {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 20px;
 }
 
-.role-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(100, 116, 139, 0.1);
+.role-card:hover, .vertical-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 25px 50px rgba(100, 116, 139, 0.15);
 }
 
-.testimonial-gradient {
-  background: linear-gradient(
-    135deg,
-    rgba(249, 250, 251, 1) 0%,
-    rgba(248, 250, 252, 0.8) 100%
-  );
+/* Grid Pattern */
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(rgba(99, 102, 241, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
+/* Border Gradients */
+.border-gradient-purple {
+  border: 2px solid transparent;
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(135deg, #9b87f5, #6E59A5) border-box;
+}
+
+.border-gradient-blue {
+  border: 2px solid transparent;
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(135deg, #0EA5E9, #06B6D4) border-box;
+}
+
+.border-gradient-green {
+  border: 2px solid transparent;
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(135deg, #22C55E, #16A34A) border-box;
+}
+
+/* Enhanced Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Button Enhancements */
 .btn-primary {
-  @apply bg-peoplebook-blue text-white hover:bg-peoplebook-blue/90 transition-colors;
+  @apply bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue text-white hover:from-peoplebook-purple/90 hover:to-peoplebook-blue/90 transition-all duration-300;
 }
 
 .btn-outline {
-  @apply bg-white text-peoplebook-blue border border-peoplebook-blue hover:bg-slate-50 transition-colors;
+  @apply bg-white text-peoplebook-blue border-2 border-peoplebook-blue hover:bg-peoplebook-blue hover:text-white transition-all duration-300;
 }
 
+/* Section Styling */
 .section-header {
-  @apply text-3xl font-bold mb-4 text-peoplebook-text;
+  @apply text-4xl md:text-5xl font-bold mb-6 text-peoplebook-text;
 }
 
 .section-description {
-  @apply text-slate-600 max-w-2xl mx-auto;
+  @apply text-xl text-slate-600 max-w-3xl mx-auto;
+}
+
+/* Enhanced fade-in animation */
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in-up 0.8s ease-out forwards;
 }
