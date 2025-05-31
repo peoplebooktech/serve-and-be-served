@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -34,7 +33,7 @@ const Navbar = () => {
           <div className="flex items-center space-x-6">
             <Link to="/" className="flex items-center">
               <img 
-                src="/lovable-uploads/4603a74a-92bb-4abb-8586-eb906270e201.png" 
+                src="/lovable-uploads/03dda1ae-fe4e-4afe-88ab-3f4889cf38bf.png" 
                 alt="Peoplebook.ai" 
                 className="h-10 w-auto"
               />
