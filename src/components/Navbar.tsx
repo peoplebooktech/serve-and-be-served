@@ -34,7 +34,7 @@ const Navbar = () => {
           <div className="flex items-center space-x-6">
             <Link to="/" className="flex items-center">
               <img 
-                src="/lovable-uploads/e2b094c7-3195-4019-ae7e-89ec432ebc03.png" 
+                src="/lovable-uploads/4603a74a-92bb-4abb-8586-eb906270e201.png" 
                 alt="Peoplebook.ai" 
                 className="h-10 w-auto"
               />
