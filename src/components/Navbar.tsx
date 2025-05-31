@@ -33,7 +33,11 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center space-x-6">
             <Link to="/" className="flex items-center">
-              <span className="text-2xl font-bold text-peoplebook-blue">Peoplebook.ai</span>
+              <img 
+                src="/lovable-uploads/e2b094c7-3195-4019-ae7e-89ec432ebc03.png" 
+                alt="Peoplebook.ai" 
+                className="h-10 w-auto"
+              />
             </Link>
             
             {/* Search Panel */}
