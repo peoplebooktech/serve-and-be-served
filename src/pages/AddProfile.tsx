@@ -96,6 +96,10 @@ const AddProfile = () => {
     setLoading(true);
 
     try {
+      // Debug logging
+      console.log('Creating profile for user:', user.id);
+      console.log('User object:', user);
+
       const skillsArray = formData.skills
         .split(',')
         .map(skill => skill.trim())
@@ -116,14 +120,22 @@ const AddProfile = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Profile creation error:', error);
+        throw error;
+      }
+
+      console.log('Profile created successfully:', data);
 
       toast({
         title: "Success",
         description: "Profile created successfully!",
       });
 
-      navigate(`/profiles/${data.id}`);
+      // Add a small delay to ensure the profile is saved before navigating
+      setTimeout(() => {
+        navigate(`/profiles/${data.id}`);
+      }, 100);
     } catch (error: any) {
       toast({
         title: "Error",
