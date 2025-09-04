@@ -107,6 +107,9 @@ const Navbar = () => {
             <Link to="/" className="text-slate-700 hover:text-peoplebook-blue font-medium">
               Home
             </Link>
+            <Link to="/profiles" className="text-slate-700 hover:text-peoplebook-blue font-medium">
+              Profiles
+            </Link>
             <Link to="/about" className="text-slate-700 hover:text-peoplebook-blue font-medium">
               About
             </Link>
@@ -160,6 +163,13 @@ const Navbar = () => {
               onClick={toggleMenu}
             >
               Home
+            </Link>
+            <Link 
+              to="/profiles" 
+              className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
+              onClick={toggleMenu}
+            >
+              Profiles
             </Link>
             <Link 
               to="/about" 

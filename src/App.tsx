@@ -13,6 +13,10 @@ import Education from "./pages/Education";
 import Healthcare from "./pages/Healthcare";
 import Agriculture from "./pages/Agriculture";
 import Sports from "./pages/Sports";
+import Profiles from "./pages/Profiles";
+import ProfileDetail from "./pages/ProfileDetail";
+import AddProfile from "./pages/AddProfile";
+import EditProfile from "./pages/EditProfile";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -35,6 +39,10 @@ const App = () => (
           <Route path="/healthcare" element={<Healthcare />} />
           <Route path="/agriculture" element={<Agriculture />} />
           <Route path="/sports" element={<Sports />} />
+          <Route path="/profiles" element={<Profiles />} />
+          <Route path="/profiles/add" element={<AddProfile />} />
+          <Route path="/profiles/:id" element={<ProfileDetail />} />
+          <Route path="/profiles/:id/edit" element={<EditProfile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -33,14 +33,18 @@ const Index = () => {
                 co-grow, and co-experience in Education, Healthcare, Agriculture, and Sports.
               </p>
               <div className="flex flex-col sm:flex-row gap-6">
-                <Button className="bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:from-peoplebook-purple/90 hover:to-peoplebook-blue/90 text-white px-8 py-6 text-lg rounded-full shadow-xl hover:shadow-2xl transition-all duration-300">
-                  <BrainCircuit className="w-5 h-5 mr-2" />
-                  Start Your Journey
-                </Button>
-                <Button variant="outline" className="border-2 border-peoplebook-blue text-peoplebook-blue hover:bg-peoplebook-blue hover:text-white px-8 py-6 text-lg rounded-full transition-all duration-300">
-                  <Network className="w-5 h-5 mr-2" />
-                  Explore Connections
-                </Button>
+                <Link to="/profiles">
+                  <Button className="bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:from-peoplebook-purple/90 hover:to-peoplebook-blue/90 text-white px-8 py-6 text-lg rounded-full shadow-xl hover:shadow-2xl transition-all duration-300">
+                    <BrainCircuit className="w-5 h-5 mr-2" />
+                    Explore Profiles
+                  </Button>
+                </Link>
+                <Link to="/profiles/add">
+                  <Button variant="outline" className="border-2 border-peoplebook-blue text-peoplebook-blue hover:bg-peoplebook-blue hover:text-white px-8 py-6 text-lg rounded-full transition-all duration-300">
+                    <Network className="w-5 h-5 mr-2" />
+                    Add Your Profile
+                  </Button>
+                </Link>
               </div>
               
               {/* Trust Indicators */}
@@ -304,10 +308,12 @@ const Index = () => {
               Join Peoplebook.ai today and be part of the AI revolution in mentoring, collaboration, and societal growth.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Button className="bg-white text-peoplebook-purple hover:bg-white/90 px-12 py-6 text-lg rounded-full shadow-xl hover:shadow-2xl transition-all duration-300">
-                <Sparkles className="w-5 h-5 mr-2" />
-                Start Your Journey
-              </Button>
+              <Link to="/profiles">
+                <Button className="bg-white text-peoplebook-purple hover:bg-white/90 px-12 py-6 text-lg rounded-full shadow-xl hover:shadow-2xl transition-all duration-300">
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Browse Profiles
+                </Button>
+              </Link>
               <Link to="/how-it-works">
                 <Button variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-peoplebook-purple px-12 py-6 text-lg rounded-full transition-all duration-300">
                   <Network className="w-5 h-5 mr-2" />
