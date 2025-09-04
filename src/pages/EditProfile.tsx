@@ -55,6 +55,12 @@ const EditProfile = () => {
       }
 
       const profile = data[0];
+      
+      // Only allow editing own profile
+      if (!profile.is_own_profile) {
+        throw new Error('Unauthorized to edit this profile');
+      }
+
       setFormData({
         name: profile.name || "",
         title: profile.title || "",
