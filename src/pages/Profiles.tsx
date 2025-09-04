@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Filter, Plus, MapPin, Briefcase, Mail, Edit2, Trash2, Loader2 } from "lucide-react";
+import { Search, Filter, Plus, MapPin, Briefcase, Mail, Edit2, Trash2, Loader2, Users, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -314,26 +314,92 @@ const Profiles = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <div className="max-w-md mx-auto">
-              <div className="mb-6">
-                <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Search className="w-12 h-12 text-slate-400" />
+          <div className="relative overflow-hidden py-20">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50"></div>
+            <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+            <div className="relative max-w-4xl mx-auto text-center">
+              <div className="mb-8">
+                {/* Floating Elements */}
+                <div className="relative inline-block">
+                  <div className="absolute -top-8 -left-8 w-16 h-16 rounded-full bg-gradient-to-r from-peoplebook-purple/20 to-peoplebook-blue/20 animate-pulse"></div>
+                  <div className="absolute -bottom-8 -right-8 w-20 h-20 rounded-full bg-gradient-to-r from-peoplebook-blue/20 to-peoplebook-green/20 animate-pulse" style={{ animationDelay: "1s" }}></div>
+                  
+                  {/* Main Icon Container */}
+                  <div className="relative z-10 w-32 h-32 bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl">
+                    {searchTerm || companyFilter || skillFilter ? (
+                      <Search className="w-16 h-16 text-white" />
+                    ) : (
+                      <Users className="w-16 h-16 text-white" />
+                    )}
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold text-slate-600 mb-2">No profiles found</h3>
-                <p className="text-slate-500">
+              </div>
+
+              <div className="mb-8">
+                <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-peoplebook-purple/10 to-peoplebook-blue/10 rounded-full mb-6">
+                  <Sparkles className="w-4 h-4 text-peoplebook-purple mr-2" />
+                  <span className="text-sm font-medium text-peoplebook-purple">
+                    {searchTerm || companyFilter || skillFilter ? "No Matches Found" : "Start Building Community"}
+                  </span>
+                </div>
+                
+                <h3 className="text-4xl md:text-5xl font-bold mb-6 text-peoplebook-text">
+                  {searchTerm || companyFilter || skillFilter ? (
+                    <>No <span className="gradient-text">Profiles</span> Match</>
+                  ) : (
+                    <>Be the <span className="gradient-text">First</span> to Join</>
+                  )}
+                </h3>
+                
+                <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-8">
                   {searchTerm || companyFilter || skillFilter
-                    ? "Try adjusting your search filters"
-                    : "Be the first to add a profile to our directory"}
+                    ? "Try adjusting your search filters or exploring different criteria to find the perfect matches in our community."
+                    : "Start building our people directory by adding your profile. Connect with AI-matched mentors, experts, and communities to co-create and co-grow together."}
                 </p>
               </div>
-              {user && (
-                <Link to="/profiles/add">
-                  <Button className="bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:from-peoplebook-purple/90 hover:to-peoplebook-blue/90 text-white">
-                    <Plus className="w-4 h-4 mr-2" />
-                    {searchTerm || companyFilter || skillFilter ? "Add Profile" : "Add First Profile"}
+
+              <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                {user && (
+                  <Link to="/profiles/add">
+                    <Button className="bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:from-peoplebook-purple/90 hover:to-peoplebook-blue/90 text-white px-8 py-4 text-lg rounded-full shadow-xl hover:shadow-2xl transition-all duration-300">
+                      <Plus className="w-5 h-5 mr-2" />
+                      {searchTerm || companyFilter || skillFilter ? "Add Your Profile" : "Add First Profile"}
+                    </Button>
+                  </Link>
+                )}
+                
+                {(searchTerm || companyFilter || skillFilter) && (
+                  <Button 
+                    variant="outline" 
+                    className="border-2 border-peoplebook-blue text-peoplebook-blue hover:bg-peoplebook-blue hover:text-white px-8 py-4 text-lg rounded-full transition-all duration-300"
+                    onClick={() => {
+                      setSearchTerm("");
+                      setCompanyFilter("");
+                      setSkillFilter("");
+                    }}
+                  >
+                    <Search className="w-5 h-5 mr-2" />
+                    Clear Filters
                   </Button>
-                </Link>
+                )}
+              </div>
+
+              {/* Trust Indicators for Empty State */}
+              {!searchTerm && !companyFilter && !skillFilter && (
+                <div className="mt-16 flex items-center justify-center space-x-12">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-peoplebook-blue">AI-Powered</div>
+                    <div className="text-sm text-slate-600">Smart Matching</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-peoplebook-purple">4 Verticals</div>
+                    <div className="text-sm text-slate-600">Key Focus Areas</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-peoplebook-green">Secure</div>
+                    <div className="text-sm text-slate-600">Privacy First</div>
+                  </div>
+                </div>
               )}
             </div>
           </div>
