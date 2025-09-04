@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Save, Plus } from "lucide-react";
+import { ArrowLeft, Save, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -34,7 +35,19 @@ const AddProfile = () => {
 
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to add a profile.",
+        variant: "destructive",
+      });
+      navigate('/auth');
+    }
+  }, [user, navigate, toast]);
 
   const handleInputChange = (field: keyof ProfileForm, value: string) => {
     setFormData(prev => ({
@@ -68,6 +81,16 @@ const AddProfile = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to add a profile.",
+        variant: "destructive",
+      });
+      navigate('/auth');
+      return;
+    }
+    
     if (!validateForm()) return;
 
     setLoading(true);
@@ -88,6 +111,7 @@ const AddProfile = () => {
           contact_info: formData.contact_info.trim() || null,
           skills: skillsArray,
           image_url: formData.image_url.trim() || null,
+          user_id: user.id,
         })
         .select()
         .single();
@@ -100,11 +124,10 @@ const AddProfile = () => {
       });
 
       navigate(`/profiles/${data.id}`);
-    } catch (error) {
-      console.error('Error creating profile:', error);
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to create profile. Please try again.",
+        description: error.message || "Failed to create profile",
         variant: "destructive",
       });
     } finally {
@@ -112,189 +135,168 @@ const AddProfile = () => {
     }
   };
 
+  if (!user) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex items-center space-x-2">
+            <Loader2 className="h-8 w-8 animate-spin text-peoplebook-blue" />
+            <span className="text-lg text-slate-600">Checking authentication...</span>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-1 pt-24 pb-12">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-8">
-            <Link to="/profiles" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-4">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Profiles
-            </Link>
-            
-            <h1 className="text-4xl font-bold text-foreground mb-2">Add New Profile</h1>
-            <p className="text-muted-foreground">
-              Create a new profile to add to our directory
-            </p>
-          </div>
+      <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
+        <div className="mb-6">
+          <Link to="/profiles" className="inline-flex items-center text-peoplebook-blue hover:text-peoplebook-blue/80 mb-4">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Profiles
+          </Link>
+          <h1 className="text-3xl font-bold text-peoplebook-text">Add New Profile</h1>
+          <p className="text-slate-600 mt-2">Create a new profile in our directory</p>
+        </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Plus className="w-5 h-5 mr-2" />
-                Profile Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Name - Required */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Plus className="w-5 h-5 mr-2 text-peoplebook-blue" />
+              Profile Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-sm font-medium">
-                    Full Name <span className="text-destructive">*</span>
-                  </Label>
+                  <Label htmlFor="name">Full Name *</Label>
                   <Input
                     id="name"
                     type="text"
-                    placeholder="Enter full name"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
+                    placeholder="Enter full name"
                     required
                   />
                 </div>
 
-                {/* Title */}
                 <div className="space-y-2">
-                  <Label htmlFor="title" className="text-sm font-medium">
-                    Job Title
-                  </Label>
+                  <Label htmlFor="title">Job Title</Label>
                   <Input
                     id="title"
                     type="text"
-                    placeholder="e.g., Senior Software Engineer"
                     value={formData.title}
                     onChange={(e) => handleInputChange('title', e.target.value)}
+                    placeholder="e.g., Senior Software Engineer"
                   />
                 </div>
 
-                {/* Company */}
                 <div className="space-y-2">
-                  <Label htmlFor="company" className="text-sm font-medium">
-                    Company
-                  </Label>
+                  <Label htmlFor="company">Company</Label>
                   <Input
                     id="company"
                     type="text"
-                    placeholder="e.g., TechCorp Inc"
                     value={formData.company}
                     onChange={(e) => handleInputChange('company', e.target.value)}
+                    placeholder="e.g., Tech Corp"
                   />
                 </div>
 
-                {/* Bio */}
                 <div className="space-y-2">
-                  <Label htmlFor="bio" className="text-sm font-medium">
-                    Bio
-                  </Label>
-                  <Textarea
-                    id="bio"
-                    placeholder="Tell us about yourself, your experience, and what you're passionate about..."
-                    value={formData.bio}
-                    onChange={(e) => handleInputChange('bio', e.target.value)}
-                    rows={4}
-                  />
-                </div>
-
-                {/* Contact Info */}
-                <div className="space-y-2">
-                  <Label htmlFor="contact_info" className="text-sm font-medium">
-                    Contact Information
-                  </Label>
+                  <Label htmlFor="contact_info">Contact Info</Label>
                   <Input
                     id="contact_info"
-                    type="text"
-                    placeholder="Email address, LinkedIn, or website"
+                    type="email"
                     value={formData.contact_info}
                     onChange={(e) => handleInputChange('contact_info', e.target.value)}
+                    placeholder="e.g., email@example.com"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Provide your email, LinkedIn profile, or website URL
-                  </p>
                 </div>
+              </div>
 
-                {/* Skills */}
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea
+                  id="bio"
+                  value={formData.bio}
+                  onChange={(e) => handleInputChange('bio', e.target.value)}
+                  placeholder="Tell us about yourself..."
+                  rows={4}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="skills">Skills</Label>
+                <Input
+                  id="skills"
+                  type="text"
+                  value={formData.skills}
+                  onChange={(e) => handleInputChange('skills', e.target.value)}
+                  placeholder="e.g., React, Node.js, Python (comma-separated)"
+                />
+                <p className="text-sm text-slate-500">Separate multiple skills with commas</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="image_url">Profile Image URL</Label>
+                <Input
+                  id="image_url"
+                  type="url"
+                  value={formData.image_url}
+                  onChange={(e) => handleInputChange('image_url', e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+
+              {formData.image_url && (
                 <div className="space-y-2">
-                  <Label htmlFor="skills" className="text-sm font-medium">
-                    Skills
-                  </Label>
-                  <Input
-                    id="skills"
-                    type="text"
-                    placeholder="React, Node.js, TypeScript, Project Management"
-                    value={formData.skills}
-                    onChange={(e) => handleInputChange('skills', e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Separate skills with commas
-                  </p>
-                </div>
-
-                {/* Profile Image URL */}
-                <div className="space-y-2">
-                  <Label htmlFor="image_url" className="text-sm font-medium">
-                    Profile Image URL
-                  </Label>
-                  <Input
-                    id="image_url"
-                    type="url"
-                    placeholder="https://example.com/profile-image.jpg"
-                    value={formData.image_url}
-                    onChange={(e) => handleInputChange('image_url', e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Optional: Link to your profile image
-                  </p>
-                </div>
-
-                {/* Image Preview */}
-                {formData.image_url && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Preview</Label>
-                    <div className="w-20 h-20 rounded-full overflow-hidden bg-muted">
-                      <img
-                        src={formData.image_url}
-                        alt="Profile preview"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
-                      />
-                    </div>
+                  <Label>Image Preview</Label>
+                  <div className="flex justify-center">
+                    <img
+                      src={formData.image_url}
+                      alt="Profile preview"
+                      className="w-24 h-24 rounded-full object-cover border-2 border-slate-200"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
                   </div>
-                )}
-
-                {/* Submit Button */}
-                <div className="flex items-center justify-end space-x-4 pt-6">
-                  <Link to="/profiles">
-                    <Button type="button" variant="outline">
-                      Cancel
-                    </Button>
-                  </Link>
-                  <Button 
-                    type="submit" 
-                    disabled={loading}
-                    className="bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue text-white"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Creating...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4 mr-2" />
-                        Create Profile
-                      </>
-                    )}
-                  </Button>
                 </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link to="/profiles" className="flex-1">
+                  <Button type="button" variant="outline" className="w-full">
+                    Cancel
+                  </Button>
+                </Link>
+                <Button 
+                  type="submit" 
+                  disabled={loading}
+                  className="flex-1 bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:from-peoplebook-purple/90 hover:to-peoplebook-blue/90 text-white"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Creating Profile...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Create Profile
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       </main>
 
       <Footer />

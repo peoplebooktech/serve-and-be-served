@@ -1,15 +1,23 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Menu, X, Search, Users, BookOpen, Stethoscope, Wheat, Trophy } from "lucide-react";
+import { Menu, X, Search, Users, BookOpen, Stethoscope, Wheat, Trophy, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   // Sample search suggestions - in a real app, this would come from an API
   const searchSuggestions = [
@@ -119,12 +127,32 @@ const Navbar = () => {
             <Link to="/dashboard" className="text-slate-700 hover:text-peoplebook-blue font-medium">
               Dashboard
             </Link>
-            <Button className="bg-peoplebook-blue hover:bg-peoplebook-blue/90 text-white">
-              Sign Up
-            </Button>
-            <Button variant="outline" className="border-peoplebook-blue text-peoplebook-blue hover:bg-slate-50">
-              Log In
-            </Button>
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <span className="text-slate-600 text-sm">Welcome, {user.user_metadata?.name || user.email}</span>
+                <Button 
+                  onClick={handleSignOut}
+                  variant="outline" 
+                  className="border-peoplebook-blue text-peoplebook-blue hover:bg-slate-50"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Link to="/auth">
+                  <Button className="bg-peoplebook-blue hover:bg-peoplebook-blue/90 text-white">
+                    Sign Up
+                  </Button>
+                </Link>
+                <Link to="/auth">
+                  <Button variant="outline" className="border-peoplebook-blue text-peoplebook-blue hover:bg-slate-50">
+                    Log In
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -193,12 +221,32 @@ const Navbar = () => {
               Dashboard
             </Link>
             <div className="flex flex-col space-y-2 mt-4 px-3 pb-3">
-              <Button className="bg-peoplebook-blue hover:bg-peoplebook-blue/90 text-white w-full">
-                Sign Up
-              </Button>
-              <Button variant="outline" className="border-peoplebook-blue text-peoplebook-blue hover:bg-slate-50 w-full">
-                Log In
-              </Button>
+              {user ? (
+                <div className="space-y-2">
+                  <div className="text-slate-600 text-sm text-center">Welcome, {user.user_metadata?.name || user.email}</div>
+                  <Button 
+                    onClick={handleSignOut}
+                    variant="outline" 
+                    className="border-peoplebook-blue text-peoplebook-blue hover:bg-slate-50 w-full"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Link to="/auth">
+                    <Button className="bg-peoplebook-blue hover:bg-peoplebook-blue/90 text-white w-full">
+                      Sign Up
+                    </Button>
+                  </Link>
+                  <Link to="/auth">
+                    <Button variant="outline" className="border-peoplebook-blue text-peoplebook-blue hover:bg-slate-50 w-full">
+                      Log In
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
