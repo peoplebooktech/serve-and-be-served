@@ -16,13 +16,11 @@ interface Profile {
   title: string;
   company: string;
   bio: string;
-  contact_info: string | null;
+  contact_info: string;
   skills: string[];
   image_url: string;
   created_at: string;
   updated_at: string;
-  user_id: string;
-  is_own_profile: boolean;
 }
 
 const ProfileDetail = () => {
@@ -45,8 +43,7 @@ const ProfileDetail = () => {
 
       if (error) throw error;
       if (!data || data.length === 0) {
-        setProfile(null);
-        return;
+        throw new Error('Profile not found');
       }
       setProfile(data[0]);
     } catch (error) {
@@ -152,20 +149,18 @@ const ProfileDetail = () => {
                 </p>
               </div>
               
-              {profile.is_own_profile && (
-                <div className="flex items-center space-x-2">
-                  <Link to={`/profiles/${profile.id}/edit`}>
-                    <Button variant="outline">
-                      <Edit2 className="w-4 h-4 mr-2" />
-                      Edit Profile
-                    </Button>
-                  </Link>
-                  <Button variant="destructive" onClick={handleDelete}>
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete Profile
+              <div className="flex items-center space-x-2">
+                <Link to={`/profiles/${profile.id}/edit`}>
+                  <Button variant="outline">
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    Edit Profile
                   </Button>
-                </div>
-              )}
+                </Link>
+                <Button variant="destructive" onClick={handleDelete}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Profile
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -202,7 +197,7 @@ const ProfileDetail = () => {
                       </div>
                     )}
 
-                    {profile.contact_info && profile.is_own_profile && (
+                    {profile.contact_info && (
                       <div className="flex items-center justify-center mb-4">
                         <Mail className="w-4 h-4 text-muted-foreground mr-2" />
                         <a

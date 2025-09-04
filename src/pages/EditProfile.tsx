@@ -50,18 +50,11 @@ const EditProfile = () => {
         .rpc('get_public_profile_by_id', { profile_id: profileId });
 
       if (error) throw error;
-      
       if (!data || data.length === 0) {
         throw new Error('Profile not found');
       }
-      
-      const profile = data[0];
-      
-      // Only allow editing own profile
-      if (!profile.is_own_profile) {
-        throw new Error('Unauthorized to edit this profile');
-      }
 
+      const profile = data[0];
       setFormData({
         name: profile.name || "",
         title: profile.title || "",
