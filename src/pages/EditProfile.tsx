@@ -47,21 +47,29 @@ const EditProfile = () => {
   const fetchProfile = async (profileId: string) => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', profileId)
-        .single();
+        .rpc('get_public_profile_by_id', { profile_id: profileId });
 
       if (error) throw error;
+      
+      if (!data || data.length === 0) {
+        throw new Error('Profile not found');
+      }
+      
+      const profile = data[0];
+      
+      // Only allow editing own profile
+      if (!profile.is_own_profile) {
+        throw new Error('Unauthorized to edit this profile');
+      }
 
       setFormData({
-        name: data.name || "",
-        title: data.title || "",
-        company: data.company || "",
-        bio: data.bio || "",
-        contact_info: data.contact_info || "",
-        skills: (data.skills || []).join(", "),
-        image_url: data.image_url || "",
+        name: profile.name || "",
+        title: profile.title || "",
+        company: profile.company || "",
+        bio: profile.bio || "",
+        contact_info: profile.contact_info || "",
+        skills: (profile.skills || []).join(", "),
+        image_url: profile.image_url || "",
       });
     } catch (error) {
       toast({

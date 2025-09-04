@@ -16,11 +16,13 @@ interface Profile {
   title: string;
   company: string;
   bio: string;
-  contact_info: string;
+  contact_info: string | null;
   skills: string[];
   image_url: string;
   created_at: string;
   updated_at: string;
+  user_id: string;
+  is_own_profile: boolean;
 }
 
 const ProfileDetail = () => {
@@ -39,13 +41,14 @@ const ProfileDetail = () => {
   const fetchProfile = async (profileId: string) => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', profileId)
-        .single();
+        .rpc('get_public_profile_by_id', { profile_id: profileId });
 
       if (error) throw error;
-      setProfile(data);
+      if (!data || data.length === 0) {
+        setProfile(null);
+        return;
+      }
+      setProfile(data[0]);
     } catch (error) {
       toast({
         title: "Error",
@@ -149,18 +152,20 @@ const ProfileDetail = () => {
                 </p>
               </div>
               
-              <div className="flex items-center space-x-2">
-                <Link to={`/profiles/${profile.id}/edit`}>
-                  <Button variant="outline">
-                    <Edit2 className="w-4 h-4 mr-2" />
-                    Edit Profile
+              {profile.is_own_profile && (
+                <div className="flex items-center space-x-2">
+                  <Link to={`/profiles/${profile.id}/edit`}>
+                    <Button variant="outline">
+                      <Edit2 className="w-4 h-4 mr-2" />
+                      Edit Profile
+                    </Button>
+                  </Link>
+                  <Button variant="destructive" onClick={handleDelete}>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Profile
                   </Button>
-                </Link>
-                <Button variant="destructive" onClick={handleDelete}>
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Profile
-                </Button>
-              </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -197,7 +202,7 @@ const ProfileDetail = () => {
                       </div>
                     )}
 
-                    {profile.contact_info && (
+                    {profile.contact_info && profile.is_own_profile && (
                       <div className="flex items-center justify-center mb-4">
                         <Mail className="w-4 h-4 text-muted-foreground mr-2" />
                         <a
