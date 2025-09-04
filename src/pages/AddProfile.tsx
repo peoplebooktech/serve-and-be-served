@@ -132,10 +132,8 @@ const AddProfile = () => {
         description: "Profile created successfully!",
       });
 
-      // Add a small delay to ensure the profile is saved before navigating
-      setTimeout(() => {
-        navigate(`/profiles/${data.id}`);
-      }, 100);
+      // Navigate immediately to the profile detail page
+      navigate(`/profiles/${data.id}`, { replace: true });
     } catch (error: any) {
       toast({
         title: "Error",

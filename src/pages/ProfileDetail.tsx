@@ -102,9 +102,12 @@ const ProfileDetail = () => {
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">Loading profile...</p>
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto"></div>
+            <div className="space-y-2">
+              <p className="text-lg font-medium">Loading profile...</p>
+              <p className="text-sm text-muted-foreground">Please wait while we fetch the profile details</p>
+            </div>
           </div>
         </div>
         <Footer />
