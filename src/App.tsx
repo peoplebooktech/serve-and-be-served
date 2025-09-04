@@ -19,6 +19,7 @@ import ProfileDetail from "./pages/ProfileDetail";
 import AddProfile from "./pages/AddProfile";
 import EditProfile from "./pages/EditProfile";
 import Auth from "./pages/Auth";
+import EmailConfirm from "./pages/EmailConfirm";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/confirm" element={<EmailConfirm />} />
             <Route path="/about" element={<About />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/dashboard" element={<Dashboard />} />
