@@ -26,6 +26,7 @@ export type Database = {
           skills: string[] | null
           title: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           bio?: string | null
@@ -38,6 +39,7 @@ export type Database = {
           skills?: string[] | null
           title?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           bio?: string | null
@@ -50,6 +52,7 @@ export type Database = {
           skills?: string[] | null
           title?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -58,7 +61,37 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_public_profile_by_id: {
+        Args: { profile_id: string }
+        Returns: {
+          bio: string
+          company: string
+          contact_info: string
+          created_at: string
+          id: string
+          image_url: string
+          is_own_profile: boolean
+          name: string
+          skills: string[]
+          title: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
+      get_public_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          bio: string
+          company: string
+          created_at: string
+          id: string
+          image_url: string
+          name: string
+          skills: string[]
+          title: string
+          updated_at: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
