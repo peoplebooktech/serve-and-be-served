@@ -26,7 +26,7 @@ export type Database = {
           skills: string[] | null
           title: string | null
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           bio?: string | null
@@ -39,7 +39,7 @@ export type Database = {
           skills?: string[] | null
           title?: string | null
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           bio?: string | null
@@ -52,7 +52,7 @@ export type Database = {
           skills?: string[] | null
           title?: string | null
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
