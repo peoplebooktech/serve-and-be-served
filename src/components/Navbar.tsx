@@ -158,7 +158,7 @@ const Navbar = () => {
             {user ? (
               <div className="flex items-center space-x-4">
                 <span className="text-slate-600 text-sm">Welcome, {user.user_metadata?.name || user.email}</span>
-                <Link to="/profile">
+                <Link to="/my-profile">
                   <Button variant="ghost" className="text-peoplebook-blue hover:bg-peoplebook-blue/10">
                     My Profile
                   </Button>

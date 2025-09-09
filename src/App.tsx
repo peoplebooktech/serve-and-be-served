@@ -54,13 +54,13 @@ const App = () => (
             <Route path="/healthcare" element={<Healthcare />} />
             <Route path="/agriculture" element={<Agriculture />} />
             <Route path="/sports" element={<Sports />} />
-            <Route path="/profiles" element={<Profiles />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/profiles/add" element={<ProtectedRoute><AddProfile /></ProtectedRoute>} />
+            <Route path="/profiles" element={<ProtectedRoute><Profiles /></ProtectedRoute>} />
+            <Route path="/my-profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/add-profile" element={<ProtectedRoute><AddProfile /></ProtectedRoute>} />
             <Route path="/profiles/:id" element={<ProfileDetail />} />
             <Route path="/profiles/:id/edit" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
             <Route path="/collaboration/:id" element={<CollaborationDetail />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/cookies" element={<Cookies />} />

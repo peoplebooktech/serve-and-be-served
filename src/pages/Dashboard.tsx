@@ -73,6 +73,8 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const navigate = useNavigate();
 
+  console.log("Dashboard component is loading...");
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -92,7 +94,7 @@ const Dashboard = () => {
               >
                 <Filter className="h-4 w-4" /> Filter
               </Button>
-              <Link to="/profiles/add">
+              <Link to="/add-profile">
                 <Button className="bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:opacity-90 flex gap-2">
                   <PlusCircle className="h-4 w-4" /> New Collaboration
                 </Button>
@@ -189,7 +191,7 @@ const Dashboard = () => {
                             <div className="text-sm text-muted-foreground">Individual</div>
                           </div>
                         </div>
-                        <Link to="/profile">
+                        <Link to="/my-profile">
                           <Button variant="outline" size="sm" className="w-full">
                             View Profile
                           </Button>
@@ -273,7 +275,7 @@ const Dashboard = () => {
                     <p className="mt-2 text-muted-foreground text-center max-w-md">
                       Start a new collaboration or check back later for incoming requests.
                     </p>
-                    <Link to="/profiles/add">
+                    <Link to="/add-profile">
                       <Button className="mt-6 bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:opacity-90">
                         Start New Collaboration
                       </Button>
