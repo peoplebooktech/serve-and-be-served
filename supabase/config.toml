@@ -41,3 +41,12 @@ verify_jwt = false
 
 [functions.ai-smart-reply]
 verify_jwt = false
+
+[functions.send-welcome-email]
+verify_jwt = false
+
+[functions.send-reset-email]
+verify_jwt = false
+
+[functions.notification-email]
+verify_jwt = false
