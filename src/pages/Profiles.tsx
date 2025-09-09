@@ -32,15 +32,11 @@ const Profiles = () => {
   const [companyFilter, setCompanyFilter] = useState("all-companies");
   const [skillFilter, setSkillFilter] = useState("all-skills");
   const { toast } = useToast();
-  
-  // Add safety check for AuthContext
-  let user = null;
-  try {
-    const auth = useAuth();
-    user = auth.user;
-  } catch (error) {
-    console.error('Auth context not available yet:', error);
-    // Return loading state if auth context is not ready
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+
+  // Show loading state if auth is still loading
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center space-x-2">
@@ -50,8 +46,6 @@ const Profiles = () => {
       </div>
     );
   }
-  
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProfiles();
