@@ -71,13 +71,13 @@ const Profiles = () => {
       );
     }
 
-    if (companyFilter) {
+    if (companyFilter && companyFilter !== "all") {
       filtered = filtered.filter(profile =>
         profile.company?.toLowerCase().includes(companyFilter.toLowerCase())
       );
     }
 
-    if (skillFilter) {
+    if (skillFilter && skillFilter !== "all") {
       filtered = filtered.filter(profile =>
         profile.skills?.some(skill =>
           skill.toLowerCase().includes(skillFilter.toLowerCase())
@@ -193,7 +193,7 @@ const Profiles = () => {
                 <SelectValue placeholder="Filter by company" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All companies</SelectItem>
+                <SelectItem value="all">All companies</SelectItem>
                 {getUniqueCompanies().map((company) => (
                   <SelectItem key={company} value={company}>
                     {company}
@@ -207,7 +207,7 @@ const Profiles = () => {
                 <SelectValue placeholder="Filter by skill" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All skills</SelectItem>
+                <SelectItem value="all">All skills</SelectItem>
                 {getUniqueSkills().map((skill) => (
                   <SelectItem key={skill} value={skill}>
                     {skill}
@@ -374,8 +374,8 @@ const Profiles = () => {
                     className="border-2 border-peoplebook-blue text-peoplebook-blue hover:bg-peoplebook-blue hover:text-white px-8 py-4 text-lg rounded-full transition-all duration-300"
                     onClick={() => {
                       setSearchTerm("");
-                      setCompanyFilter("");
-                      setSkillFilter("");
+                      setCompanyFilter("all");
+                      setSkillFilter("all");
                     }}
                   >
                     <Search className="w-5 h-5 mr-2" />
