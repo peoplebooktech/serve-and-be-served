@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,9 +70,6 @@ const activeMilestones = [
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const navigate = useNavigate();
-
-  console.log("Dashboard component is loading...");
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -87,18 +83,12 @@ const Dashboard = () => {
               <p className="text-muted-foreground mt-1">Welcome back! Here's your collaboration overview.</p>
             </div>
             <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-2">
-              <Button 
-                variant="outline" 
-                className="flex gap-2"
-                onClick={() => setActiveTab("active")}
-              >
+              <Button variant="outline" className="flex gap-2">
                 <Filter className="h-4 w-4" /> Filter
               </Button>
-              <Link to="/add-profile">
-                <Button className="bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:opacity-90 flex gap-2">
-                  <PlusCircle className="h-4 w-4" /> New Collaboration
-                </Button>
-              </Link>
+              <Button className="bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:opacity-90 flex gap-2">
+                <PlusCircle className="h-4 w-4" /> New Collaboration
+              </Button>
             </div>
           </div>
 
@@ -191,11 +181,9 @@ const Dashboard = () => {
                             <div className="text-sm text-muted-foreground">Individual</div>
                           </div>
                         </div>
-                        <Link to="/my-profile">
-                          <Button variant="outline" size="sm" className="w-full">
-                            View Profile
-                          </Button>
-                        </Link>
+                        <Button variant="outline" size="sm" className="w-full">
+                          Edit Profile
+                        </Button>
                       </CardContent>
                     </Card>
                     
@@ -215,13 +203,8 @@ const Dashboard = () => {
                           <p className="text-sm text-muted-foreground">
                             Detailed analytics available with premium subscription
                           </p>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="mt-4"
-                            onClick={() => navigate('/settings')}
-                          >
-                            View Settings
+                          <Button variant="outline" size="sm" className="mt-4">
+                            Upgrade to Premium
                           </Button>
                         </div>
                       </CardContent>
@@ -275,11 +258,9 @@ const Dashboard = () => {
                     <p className="mt-2 text-muted-foreground text-center max-w-md">
                       Start a new collaboration or check back later for incoming requests.
                     </p>
-                    <Link to="/add-profile">
-                      <Button className="mt-6 bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:opacity-90">
-                        Start New Collaboration
-                      </Button>
-                    </Link>
+                    <Button className="mt-6 bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:opacity-90">
+                      Start New Collaboration
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

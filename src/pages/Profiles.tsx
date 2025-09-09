@@ -29,28 +29,10 @@ const Profiles = () => {
   const [filteredProfiles, setFilteredProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [companyFilter, setCompanyFilter] = useState("all-companies");
-  const [skillFilter, setSkillFilter] = useState("all-skills");
+  const [companyFilter, setCompanyFilter] = useState("");
+  const [skillFilter, setSkillFilter] = useState("");
   const { toast } = useToast();
-  
-  // Add safety check for AuthContext
-  let user = null;
-  try {
-    const auth = useAuth();
-    user = auth.user;
-  } catch (error) {
-    console.error('Auth context not available yet:', error);
-    // Return loading state if auth context is not ready
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex items-center space-x-2">
-          <Loader2 className="h-8 w-8 animate-spin text-peoplebook-blue" />
-          <span className="text-lg text-slate-600">Loading...</span>
-        </div>
-      </div>
-    );
-  }
-  
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -89,13 +71,13 @@ const Profiles = () => {
       );
     }
 
-    if (companyFilter && companyFilter !== "all-companies") {
+    if (companyFilter) {
       filtered = filtered.filter(profile =>
         profile.company?.toLowerCase().includes(companyFilter.toLowerCase())
       );
     }
 
-    if (skillFilter && skillFilter !== "all-skills") {
+    if (skillFilter) {
       filtered = filtered.filter(profile =>
         profile.skills?.some(skill =>
           skill.toLowerCase().includes(skillFilter.toLowerCase())
@@ -211,7 +193,7 @@ const Profiles = () => {
                 <SelectValue placeholder="Filter by company" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all-companies">All companies</SelectItem>
+                <SelectItem value="">All companies</SelectItem>
                 {getUniqueCompanies().map((company) => (
                   <SelectItem key={company} value={company}>
                     {company}
@@ -225,7 +207,7 @@ const Profiles = () => {
                 <SelectValue placeholder="Filter by skill" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all-skills">All skills</SelectItem>
+                <SelectItem value="">All skills</SelectItem>
                 {getUniqueSkills().map((skill) => (
                   <SelectItem key={skill} value={skill}>
                     {skill}
@@ -392,8 +374,8 @@ const Profiles = () => {
                     className="border-2 border-peoplebook-blue text-peoplebook-blue hover:bg-peoplebook-blue hover:text-white px-8 py-4 text-lg rounded-full transition-all duration-300"
                     onClick={() => {
                       setSearchTerm("");
-                      setCompanyFilter("all-companies");
-                      setSkillFilter("all-skills");
+                      setCompanyFilter("");
+                      setSkillFilter("");
                     }}
                   >
                     <Search className="w-5 h-5 mr-2" />

@@ -1,61 +1,38 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Menu, X, Search, Users, BookOpen, Stethoscope, Wheat, Trophy, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [profiles, setProfiles] = useState<any[]>([]);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-
-  // Fetch profiles for search functionality
-  useEffect(() => {
-    fetchProfiles();
-  }, []);
-
-  const fetchProfiles = async () => {
-    try {
-      const { data, error } = await supabase.rpc('get_public_profiles');
-      if (error) throw error;
-      setProfiles(data || []);
-    } catch (error) {
-      console.error('Failed to fetch profiles for search:', error);
-    }
-  };
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
   };
 
-  // Filter profiles based on search query
-  const filteredSuggestions = profiles.filter(profile =>
-    searchQuery && (
-      profile.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.bio?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.skills?.some((skill: string) => 
-        skill.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    )
-  ).slice(0, 6); // Limit to 6 results
+  // Sample search suggestions - in a real app, this would come from an API
+  const searchSuggestions = [
+    { type: "user", name: "Dr. Sarah Johnson", category: "Healthcare", icon: Users },
+    { type: "user", name: "Prof. Michael Chen", category: "Education", icon: Users },
+    { type: "vertical", name: "Math Tutoring", category: "Education", icon: BookOpen },
+    { type: "vertical", name: "Mental Health", category: "Healthcare", icon: Stethoscope },
+    { type: "vertical", name: "Organic Farming", category: "Agriculture", icon: Wheat },
+    { type: "vertical", name: "Football Training", category: "Sports", icon: Trophy },
+  ];
 
-  const handleSearchResultClick = (profileId: string) => {
-    setIsSearchFocused(false);
-    setSearchQuery("");
-    navigate(`/profiles/${profileId}`);
-  };
+  const filteredSuggestions = searchSuggestions.filter(item =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <nav className="bg-white/95 backdrop-blur-sm fixed w-full z-50 shadow-sm">
@@ -99,38 +76,33 @@ const Navbar = () => {
                   
                   {filteredSuggestions.length > 0 && (
                     <div className="py-2">
-                      {filteredSuggestions.map((profile, index) => (
-                        <button
-                          key={profile.id || index}
-                          className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-slate-50 transition-colors text-left"
-                          onClick={() => handleSearchResultClick(profile.id)}
-                        >
-                          {profile.image_url ? (
-                            <img
-                              src={profile.image_url}
-                              alt={profile.name}
-                              className="w-8 h-8 rounded-full object-cover"
-                            />
-                          ) : (
+                      {filteredSuggestions.map((item, index) => {
+                        const IconComponent = item.icon;
+                        return (
+                          <button
+                            key={index}
+                            className="w-full px-4 py-2 flex items-center space-x-3 hover:bg-slate-50 transition-colors text-left"
+                            onClick={() => {
+                              setSearchQuery(item.name);
+                              setIsSearchFocused(false);
+                            }}
+                          >
                             <div className="w-8 h-8 bg-peoplebook-blue/10 rounded-full flex items-center justify-center">
-                              <Users className="h-4 w-4 text-peoplebook-blue" />
+                              <IconComponent className="h-4 w-4 text-peoplebook-blue" />
                             </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-slate-900 truncate">{profile.name}</div>
-                            <div className="text-sm text-slate-500 truncate">
-                              {profile.title && profile.company ? `${profile.title} at ${profile.company}` : 
-                               profile.title || profile.company || 'Profile'}
+                            <div>
+                              <div className="font-medium text-slate-900">{item.name}</div>
+                              <div className="text-sm text-slate-500">{item.category}</div>
                             </div>
-                          </div>
-                        </button>
-                      ))}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                   
                   {searchQuery && filteredSuggestions.length === 0 && (
                     <div className="p-4 text-center text-slate-500">
-                      No profiles found for "{searchQuery}"
+                      No results found for "{searchQuery}"
                     </div>
                   )}
                 </div>
@@ -158,16 +130,6 @@ const Navbar = () => {
             {user ? (
               <div className="flex items-center space-x-4">
                 <span className="text-slate-600 text-sm">Welcome, {user.user_metadata?.name || user.email}</span>
-                <Link to="/my-profile">
-                  <Button variant="ghost" className="text-peoplebook-blue hover:bg-peoplebook-blue/10">
-                    My Profile
-                  </Button>
-                </Link>
-                <Link to="/settings">
-                  <Button variant="ghost" className="text-peoplebook-blue hover:bg-peoplebook-blue/10">
-                    Settings
-                  </Button>
-                </Link>
                 <Button 
                   onClick={handleSignOut}
                   variant="outline" 
@@ -262,16 +224,6 @@ const Navbar = () => {
               {user ? (
                 <div className="space-y-2">
                   <div className="text-slate-600 text-sm text-center">Welcome, {user.user_metadata?.name || user.email}</div>
-                  <Link to="/profile">
-                    <Button variant="ghost" className="w-full text-peoplebook-blue hover:bg-peoplebook-blue/10">
-                      My Profile
-                    </Button>
-                  </Link>
-                  <Link to="/settings">
-                    <Button variant="ghost" className="w-full text-peoplebook-blue hover:bg-peoplebook-blue/10">
-                      Settings
-                    </Button>
-                  </Link>
                   <Button 
                     onClick={handleSignOut}
                     variant="outline" 

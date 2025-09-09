@@ -16,16 +16,16 @@ const Footer = () => {
               co-creating, co-growth, and shared experiences through non-formal education and mentoring.
             </p>
             <div className="flex space-x-4 mt-6">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-peoplebook-blue">
+              <a href="#" className="text-slate-400 hover:text-peoplebook-blue">
                 <Facebook className="h-5 w-5" />
               </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-peoplebook-blue">
+              <a href="#" className="text-slate-400 hover:text-peoplebook-blue">
                 <Twitter className="h-5 w-5" />
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-peoplebook-blue">
+              <a href="#" className="text-slate-400 hover:text-peoplebook-blue">
                 <Instagram className="h-5 w-5" />
               </a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-peoplebook-blue">
+              <a href="#" className="text-slate-400 hover:text-peoplebook-blue">
                 <Linkedin className="h-5 w-5" />
               </a>
             </div>
