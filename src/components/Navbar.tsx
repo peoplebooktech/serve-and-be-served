@@ -158,6 +158,16 @@ const Navbar = () => {
             {user ? (
               <div className="flex items-center space-x-4">
                 <span className="text-slate-600 text-sm">Welcome, {user.user_metadata?.name || user.email}</span>
+                <Link to="/profile">
+                  <Button variant="ghost" className="text-peoplebook-blue hover:bg-peoplebook-blue/10">
+                    My Profile
+                  </Button>
+                </Link>
+                <Link to="/settings">
+                  <Button variant="ghost" className="text-peoplebook-blue hover:bg-peoplebook-blue/10">
+                    Settings
+                  </Button>
+                </Link>
                 <Button 
                   onClick={handleSignOut}
                   variant="outline" 
@@ -252,6 +262,16 @@ const Navbar = () => {
               {user ? (
                 <div className="space-y-2">
                   <div className="text-slate-600 text-sm text-center">Welcome, {user.user_metadata?.name || user.email}</div>
+                  <Link to="/profile">
+                    <Button variant="ghost" className="w-full text-peoplebook-blue hover:bg-peoplebook-blue/10">
+                      My Profile
+                    </Button>
+                  </Link>
+                  <Link to="/settings">
+                    <Button variant="ghost" className="w-full text-peoplebook-blue hover:bg-peoplebook-blue/10">
+                      Settings
+                    </Button>
+                  </Link>
                   <Button 
                     onClick={handleSignOut}
                     variant="outline" 

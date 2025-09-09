@@ -189,9 +189,9 @@ const Dashboard = () => {
                             <div className="text-sm text-muted-foreground">Individual</div>
                           </div>
                         </div>
-                        <Link to="/profiles/add">
+                        <Link to="/profile">
                           <Button variant="outline" size="sm" className="w-full">
-                            Edit Profile
+                            View Profile
                           </Button>
                         </Link>
                       </CardContent>
@@ -217,9 +217,9 @@ const Dashboard = () => {
                             variant="outline" 
                             size="sm" 
                             className="mt-4"
-                            onClick={() => navigate('/profiles/add')}
+                            onClick={() => navigate('/settings')}
                           >
-                            Upgrade to Premium
+                            View Settings
                           </Button>
                         </div>
                       </CardContent>

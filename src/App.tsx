@@ -20,6 +20,13 @@ import AddProfile from "./pages/AddProfile";
 import EditProfile from "./pages/EditProfile";
 import Auth from "./pages/Auth";
 import EmailConfirm from "./pages/EmailConfirm";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Cookies from "./pages/Cookies";
+import CollaborationDetail from "./pages/CollaborationDetail";
+import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -40,15 +47,21 @@ const App = () => (
             <Route path="/auth/confirm" element={<EmailConfirm />} />
             <Route path="/about" element={<About />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/education" element={<Education />} />
             <Route path="/healthcare" element={<Healthcare />} />
             <Route path="/agriculture" element={<Agriculture />} />
             <Route path="/sports" element={<Sports />} />
             <Route path="/profiles" element={<Profiles />} />
-            <Route path="/profiles/add" element={<AddProfile />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profiles/add" element={<ProtectedRoute><AddProfile /></ProtectedRoute>} />
             <Route path="/profiles/:id" element={<ProfileDetail />} />
-            <Route path="/profiles/:id/edit" element={<EditProfile />} />
+            <Route path="/profiles/:id/edit" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
+            <Route path="/collaboration/:id" element={<CollaborationDetail />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/cookies" element={<Cookies />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
