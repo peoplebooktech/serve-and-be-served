@@ -439,11 +439,37 @@ const Auth = () => {
                 </Alert>
               )}
 
-              {message && (
-                <Alert className="mt-4 border-green-500">
-                  <AlertDescription className="text-green-600">{message}</AlertDescription>
-                </Alert>
-              )}
+                  {message && (
+                    <Alert className="mt-4 border-green-500 bg-green-50">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <AlertDescription className="text-green-700 font-medium">
+                        {message}
+                      </AlertDescription>
+                      {showResend && (
+                        <div className="mt-4 p-3 bg-white rounded border border-green-200">
+                          <p className="text-sm text-slate-600 mb-2">
+                            Didn't receive the email? Check your spam folder first, then:
+                          </p>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={handleResendConfirmation}
+                            disabled={loading}
+                            className="w-full"
+                          >
+                            {loading ? (
+                              <>
+                                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                Sending...
+                              </>
+                            ) : (
+                              'Resend Confirmation Email'
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </Alert>
+                  )}
             </CardContent>
           </Card>
         </div>

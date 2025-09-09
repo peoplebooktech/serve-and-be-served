@@ -53,6 +53,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Helper function to check if user has a profile
+  const checkUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+      
+      return !error && data;
+    } catch (err) {
+      console.error('Error checking user profile:', err);
+      return false;
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -66,17 +82,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const userWithRoles = { ...session.user, roles };
           setUser(userWithRoles);
           
-          // If user just signed up and has role metadata but no roles in database, refresh to get the role
-          if (event === 'SIGNED_IN' && session.user.user_metadata?.role && roles.length === 0) {
-            console.log('User confirmed email, checking for auto-created role...');
-            // Give the trigger a moment to complete, then refresh roles
-            setTimeout(async () => {
-              const updatedRoles = await fetchUserRoles(session.user.id);
-              if (updatedRoles.length > 0) {
-                const userWithRoles = { ...session.user, roles: updatedRoles };
-                setUser(userWithRoles);
-              }
-            }, 1000);
+          // Check if user has a profile (for new users, trigger might create it)
+          const hasProfile = await checkUserProfile(session.user.id);
+          if (!hasProfile) {
+            console.log('No profile found, trigger should create one automatically');
           }
         } else {
           setUser(null);
@@ -94,6 +103,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const roles = await fetchUserRoles(session.user.id);
         const userWithRoles = { ...session.user, roles };
         setUser(userWithRoles);
+      } else {
+        setUser(null);
       }
       setLoading(false);
     });
