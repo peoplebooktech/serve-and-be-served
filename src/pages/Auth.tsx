@@ -18,7 +18,8 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const { signUp, signIn, user } = useAuth();
+  const [showResend, setShowResend] = useState(false);
+  const { signUp, signIn, resendConfirmation, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -66,6 +67,32 @@ const Auth = () => {
     setLoading(false);
   };
 
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      setError('Please enter your email address');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const { error } = await resendConfirmation(email);
+
+      if (error) {
+        setError(error.message || 'Failed to resend confirmation email');
+      } else {
+        setMessage('Confirmation email sent! Please check your inbox and spam folder.');
+        setShowResend(false);
+      }
+    } catch (err: any) {
+      setError('Failed to resend confirmation email. Please try again.');
+    }
+
+    setLoading(false);
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -76,13 +103,25 @@ const Auth = () => {
     setLoading(true);
     setError('');
     setMessage('');
+    setShowResend(false);
 
-    const { error } = await signIn(email, password);
+    try {
+      const { error } = await signIn(email, password);
 
-    if (error) {
-      setError(error.message);
-    } else {
-      navigate('/profiles');
+      if (error) {
+        console.error('Signin form error:', error);
+        setError(error.message || 'An error occurred during signin');
+        
+        // Show resend button if account needs confirmation
+        if (error.message && error.message.includes('not confirmed')) {
+          setShowResend(true);
+        }
+      } else {
+        navigate('/profiles');
+      }
+    } catch (err: any) {
+      console.error('Form submission error:', err);
+      setError('An unexpected error occurred. Please try again.');
     }
     
     setLoading(false);
@@ -230,6 +269,25 @@ const Auth = () => {
               {error && (
                 <Alert className="mt-4 border-destructive">
                   <AlertDescription className="text-destructive">{error}</AlertDescription>
+                  {showResend && (
+                    <div className="mt-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleResendConfirmation}
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <>
+                            <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          'Resend Confirmation Email'
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </Alert>
               )}
 
