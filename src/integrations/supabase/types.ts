@@ -116,6 +116,21 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_authenticated_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          bio: string
+          company: string
+          created_at: string
+          id: string
+          image_url: string
+          name: string
+          skills: string[]
+          title: string
+          updated_at: string
+          user_roles: string[]
+        }[]
+      }
       get_public_profile_by_id: {
         Args: { profile_id: string }
         Returns: {
@@ -145,7 +160,6 @@ export type Database = {
           skills: string[]
           title: string
           updated_at: string
-          user_roles: string[]
         }[]
       }
       get_user_roles: {
