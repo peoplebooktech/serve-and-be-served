@@ -206,7 +206,9 @@ const Profiles = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all-companies">All companies</SelectItem>
-                {getUniqueCompanies().map((company) => (
+                {getUniqueCompanies()
+                  .filter(company => company && company.trim() !== "")
+                  .map((company) => (
                   <SelectItem key={company} value={company}>
                     {company}
                   </SelectItem>
@@ -220,7 +222,9 @@ const Profiles = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all-skills">All skills</SelectItem>
-                {getUniqueSkills().map((skill) => (
+                {getUniqueSkills()
+                  .filter(skill => skill && skill.trim() !== "")
+                  .map((skill) => (
                   <SelectItem key={skill} value={skill}>
                     {skill}
                   </SelectItem>
