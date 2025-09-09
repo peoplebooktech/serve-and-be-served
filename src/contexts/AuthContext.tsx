@@ -35,15 +35,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-        
-        // Handle email confirmation success
-        if (event === 'SIGNED_IN' && session?.user && !session?.user?.email_confirmed_at) {
-          console.log('User signed in, redirecting to profiles');
-          window.location.href = '/profiles';
-        } else if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
-          console.log('Email confirmed, redirecting to profiles');
-          window.location.href = '/profiles';
-        }
       }
     );
 
