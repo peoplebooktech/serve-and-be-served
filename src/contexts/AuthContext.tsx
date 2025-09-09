@@ -58,22 +58,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp = async (email: string, password: string, name: string) => {
-    // Use a proper confirmation URL 
-    const redirectUrl = `${window.location.origin}/auth/confirm`;
-    
-    console.log('Sign up redirect URL:', redirectUrl);
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          name: name
+    try {
+      // Use a proper confirmation URL 
+      const redirectUrl = `${window.location.origin}/auth/confirm`;
+      
+      console.log('Starting signup process...');
+      console.log('Sign up redirect URL:', redirectUrl);
+      console.log('Email:', email);
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            name: name
+          }
         }
+      });
+      
+      console.log('Signup response:', { data, error });
+      
+      if (error) {
+        console.error('Signup error:', error);
+        return { error };
       }
-    });
-    return { error };
+      
+      if (data?.user && !data?.session) {
+        console.log('User created, confirmation email should be sent');
+      }
+      
+      return { error: null };
+    } catch (err: any) {
+      console.error('Signup exception:', err);
+      return { error: err };
+    }
   };
 
   const signIn = async (email: string, password: string) => {

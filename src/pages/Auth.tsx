@@ -34,16 +34,33 @@ const Auth = () => {
       return;
     }
 
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setMessage('');
 
-    const { error } = await signUp(email, password, name);
+    console.log('Form submitted for signup');
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setMessage('Please check your email to confirm your account!');
+    try {
+      const { error } = await signUp(email, password, name);
+
+      if (error) {
+        console.error('Signup form error:', error);
+        setError(error.message || 'An error occurred during signup');
+      } else {
+        setMessage('Account created! Please check your email to confirm your account. Check your spam folder if you don\'t see it.');
+        // Clear form
+        setEmail('');
+        setPassword('');
+        setName('');
+      }
+    } catch (err: any) {
+      console.error('Form submission error:', err);
+      setError('An unexpected error occurred. Please try again.');
     }
     
     setLoading(false);
