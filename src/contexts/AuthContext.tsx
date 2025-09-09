@@ -8,6 +8,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  resendConfirmation: (email: string) => Promise<{ error: any }>;
   loading: boolean;
 }
 
@@ -16,7 +17,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    // More descriptive error message and check if we're in development
+    console.error('useAuth called outside of AuthProvider. Make sure the component is wrapped in AuthProvider.');
+    console.trace('Stack trace for useAuth error:');
+    throw new Error('useAuth must be used within an AuthProvider. Check that your component is properly wrapped.');
   }
   return context;
 };
@@ -34,15 +38,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-        
-        // Handle email confirmation success
-        if (event === 'SIGNED_IN' && session?.user && !session?.user?.email_confirmed_at) {
-          console.log('User signed in, redirecting to profiles');
-          window.location.href = '/profiles';
-        } else if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
-          console.log('Email confirmed, redirecting to profiles');
-          window.location.href = '/profiles';
-        }
       }
     );
 
@@ -96,11 +91,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      console.log('Sign in response:', { data, error });
+      
+      if (error) {
+        // Check if it's an unconfirmed account
+        if (error.message === 'Invalid login credentials') {
+          // Try to determine if account exists but unconfirmed by attempting password reset
+          const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/auth/confirm`
+          });
+          
+          if (!resetError) {
+            return { 
+              error: { 
+                message: 'Account not confirmed. Please check your email for the confirmation link or click "Resend Confirmation" below.' 
+              } 
+            };
+          }
+        }
+        return { error };
+      }
+      
+      return { error: null };
+    } catch (err: any) {
+      console.error('Sign in exception:', err);
+      return { error: err };
+    }
+  };
+
+  const resendConfirmation = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/confirm`
+        }
+      });
+      
+      console.log('Resend confirmation response:', { error });
+      return { error };
+    } catch (err: any) {
+      console.error('Resend confirmation exception:', err);
+      return { error: err };
+    }
   };
 
   const signOut = async () => {
@@ -113,6 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUp,
     signIn,
     signOut,
+    resendConfirmation,
     loading,
   };
 
