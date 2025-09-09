@@ -2,13 +2,21 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+export type AppRole = 'consumer' | 'producer' | 'ad_hoc';
+
+export interface UserWithRoles extends User {
+  roles?: AppRole[];
+}
+
 interface AuthContextType {
-  user: User | null;
+  user: UserWithRoles | null;
   session: Session | null;
-  signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, name: string, role: AppRole) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   resendConfirmation: (email: string) => Promise<{ error: any }>;
+  getUserRoles: (userId: string) => Promise<AppRole[]>;
+  assignUserRole: (userId: string, role: AppRole) => Promise<{ error: any }>;
   loading: boolean;
 }
 
@@ -26,33 +34,67 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserWithRoles | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Helper function to fetch user roles
+  const fetchUserRoles = async (userId: string): Promise<AppRole[]> => {
+    try {
+      const { data, error } = await supabase.rpc('get_user_roles', { _user_id: userId });
+      if (error) {
+        console.error('Error fetching user roles:', error);
+        return [];
+      }
+      return data?.map((item: any) => item.role) || [];
+    } catch (err) {
+      console.error('Exception fetching user roles:', err);
+      return [];
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('Auth state change:', event, session?.user?.email);
         setSession(session);
-        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Fetch roles and add to user object
+          const roles = await fetchUserRoles(session.user.id);
+          const userWithRoles = { ...session.user, roles };
+          setUser(userWithRoles);
+          
+          // If user just signed up and has role metadata but no roles in database, assign the role
+          if (event === 'SIGNED_IN' && session.user.user_metadata?.role && roles.length === 0) {
+            console.log('Assigning role from metadata:', session.user.user_metadata.role);
+            await assignUserRole(session.user.id, session.user.user_metadata.role);
+          }
+        } else {
+          setUser(null);
+        }
         setLoading(false);
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log('Initial session check:', session?.user?.email);
       setSession(session);
-      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        const roles = await fetchUserRoles(session.user.id);
+        const userWithRoles = { ...session.user, roles };
+        setUser(userWithRoles);
+      }
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = async (email: string, password: string, name: string, role: AppRole) => {
     try {
       // Use a proper confirmation URL 
       const redirectUrl = `${window.location.origin}/auth/confirm`;
@@ -60,6 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Starting signup process...');
       console.log('Sign up redirect URL:', redirectUrl);
       console.log('Email:', email);
+      console.log('Role:', role);
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -67,7 +110,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            name: name
+            name: name,
+            role: role
           }
         }
       });
@@ -76,7 +120,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) {
         console.error('Signup error:', error);
+        
+        // Handle specific signup errors
+        if (error.message === 'User already registered') {
+          return { 
+            error: { 
+              message: 'An account with this email already exists. Please try signing in instead, or use the "Resend Confirmation" option if you haven\'t confirmed your email yet.'
+            } 
+          };
+        }
+        
         return { error };
+      }
+      
+      // If user is created and confirmed immediately, assign the role
+      if (data?.user && data?.session) {
+        console.log('User created and confirmed, assigning role...');
+        const roleResult = await assignUserRole(data.user.id, role);
+        if (roleResult.error) {
+          console.error('Failed to assign role:', roleResult.error);
+        }
       }
       
       if (data?.user && !data?.session) {
@@ -86,6 +149,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error: null };
     } catch (err: any) {
       console.error('Signup exception:', err);
+      return { error: err };
+    }
+  };
+
+  const getUserRoles = async (userId: string): Promise<AppRole[]> => {
+    return await fetchUserRoles(userId);
+  };
+
+  const assignUserRole = async (userId: string, role: AppRole) => {
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .insert({ user_id: userId, role: role });
+      
+      if (error) {
+        console.error('Error assigning role:', error);
+        return { error };
+      }
+      
+      // Refresh user roles after assignment
+      if (user && user.id === userId) {
+        const roles = await fetchUserRoles(userId);
+        setUser({ ...user, roles });
+      }
+      
+      return { error: null };
+    } catch (err: any) {
+      console.error('Exception assigning role:', err);
       return { error: err };
     }
   };
@@ -100,21 +191,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Sign in response:', { data, error });
       
       if (error) {
-        // Check if it's an unconfirmed account
+        console.error('Sign in error details:', error);
+        
+        // Handle different types of authentication errors
         if (error.message === 'Invalid login credentials') {
-          // Try to determine if account exists but unconfirmed by attempting password reset
-          const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/auth/confirm`
-          });
-          
-          if (!resetError) {
-            return { 
-              error: { 
-                message: 'Account not confirmed. Please check your email for the confirmation link or click "Resend Confirmation" below.' 
-              } 
-            };
-          }
+          return { 
+            error: { 
+              message: 'Invalid email or password. Please check your credentials and try again.'
+            } 
+          };
+        } else if (error.message === 'Email not confirmed') {
+          return { 
+            error: { 
+              message: 'Please check your email and click the confirmation link before signing in. Check your spam folder if needed.'
+            } 
+          };
+        } else if (error.message?.includes('signup') || error.message?.includes('confirm')) {
+          return { 
+            error: { 
+              message: 'Account not confirmed. Please check your email for the confirmation link or click "Resend Confirmation" below.'
+            } 
+          };
         }
+        
         return { error };
       }
       
@@ -154,6 +253,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signOut,
     resendConfirmation,
+    getUserRoles,
+    assignUserRole,
     loading,
   };
 
