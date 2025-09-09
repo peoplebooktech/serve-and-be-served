@@ -90,7 +90,7 @@ const Auth = () => {
         console.error('Signup form error:', error);
         setError(error.message || 'An error occurred during signup');
       } else {
-        setMessage('Account created successfully! 📧 We\'ve sent a confirmation email to ' + email + '. Please check your inbox (and spam folder) and click the confirmation link to activate your account. The link expires in 24 hours.');
+        setMessage('🎉 Account created successfully! We\'ve sent a confirmation email to ' + email + '. \n\n📧 Please check your inbox and click the confirmation link to activate your account. \n\n⚠️ Don\'t forget to check your spam/junk folder if you don\'t see it within a few minutes. \n\n🔗 The confirmation link expires in 24 hours, so please confirm soon!');
         setShowResend(true);
         // Don't clear the email field so user can resend confirmation
         setPassword('');

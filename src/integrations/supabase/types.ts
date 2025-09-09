@@ -111,6 +111,7 @@ export type Database = {
           skills: string[]
           title: string
           updated_at: string
+          user_roles: string[]
         }[]
       }
       get_user_roles: {

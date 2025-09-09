@@ -66,10 +66,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const userWithRoles = { ...session.user, roles };
           setUser(userWithRoles);
           
-          // If user just signed up and has role metadata but no roles in database, assign the role
+          // If user just signed up and has role metadata but no roles in database, refresh to get the role
           if (event === 'SIGNED_IN' && session.user.user_metadata?.role && roles.length === 0) {
-            console.log('Assigning role from metadata:', session.user.user_metadata.role);
-            await assignUserRole(session.user.id, session.user.user_metadata.role);
+            console.log('User confirmed email, checking for auto-created role...');
+            // Give the trigger a moment to complete, then refresh roles
+            setTimeout(async () => {
+              const updatedRoles = await fetchUserRoles(session.user.id);
+              if (updatedRoles.length > 0) {
+                const userWithRoles = { ...session.user, roles: updatedRoles };
+                setUser(userWithRoles);
+              }
+            }, 1000);
           }
         } else {
           setUser(null);
@@ -135,15 +142,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // If user is created and confirmed immediately, assign the role
       if (data?.user && data?.session) {
-        console.log('User created and confirmed, assigning role...');
-        const roleResult = await assignUserRole(data.user.id, role);
-        if (roleResult.error) {
-          console.error('Failed to assign role:', roleResult.error);
-        }
+        console.log('User created and confirmed, role will be assigned automatically by trigger');
       }
       
       if (data?.user && !data?.session) {
-        console.log('User created, confirmation email should be sent');
+        console.log('User created, confirmation email should be sent. Profile and role will be created upon email confirmation.');
       }
       
       return { error: null };
