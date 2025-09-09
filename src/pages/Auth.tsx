@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { AuthDebug } from '@/components/AuthDebug';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -84,15 +85,24 @@ const Auth = () => {
     setError('');
     setMessage('');
 
-    console.log('Form submitted for signup');
+    console.log('Form submitted for signup with email:', email);
+    console.log('Current URL origin:', window.location.origin);
 
     try {
       const { error } = await signUp(email, password, name, selectedRole);
 
+      console.log('Signup completed with error:', error);
+
       if (error) {
         console.error('Signup form error:', error);
         setError(error.message || 'An error occurred during signup');
+        
+        // Show resend button if it's a registration-related error
+        if (error.message?.includes('already registered') || error.message?.includes('already been registered')) {
+          setShowResend(true);
+        }
       } else {
+        console.log('Signup successful, showing success message');
         setMessage('Account created successfully! 📧 We\'ve sent a confirmation email to ' + email + '. Please check your inbox (and spam folder) and click the confirmation link to activate your account. The link expires in 24 hours.');
         setShowResend(true);
         // Don't clear the email field so user can resend confirmation
@@ -145,8 +155,12 @@ const Auth = () => {
     setMessage('');
     setShowResend(false);
 
+    console.log('Attempting sign in with email:', email);
+
     try {
       const { error } = await signIn(email, password);
+
+      console.log('Sign in completed with error:', error);
 
       if (error) {
         console.error('Signin form error:', error);
@@ -161,6 +175,7 @@ const Auth = () => {
           setShowResend(true);
         }
       } else {
+        console.log('Sign in successful, navigating to profiles');
         navigate('/profiles');
       }
     } catch (err: any) {
@@ -527,6 +542,8 @@ const Auth = () => {
               )}
             </CardContent>
           </Card>
+          
+          <AuthDebug />
         </div>
       </div>
 

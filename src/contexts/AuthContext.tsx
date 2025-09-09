@@ -125,7 +125,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (error.message === 'User already registered') {
           return { 
             error: { 
-              message: 'An account with this email already exists. Please try signing in instead, or use the "Resend Confirmation" option if you haven\'t confirmed your email yet.'
+              message: 'An account with this email already exists. Please try signing in instead, or use the "Resend Confirmation Email" button if you haven\'t confirmed your email yet.'
+            } 
+          };
+        }
+        
+        if (error.message?.includes('already been registered')) {
+          return { 
+            error: { 
+              message: 'This email is already registered. Please sign in instead or use "Resend Confirmation Email" if you need to confirm your account.'
             } 
           };
         }

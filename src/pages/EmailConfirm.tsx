@@ -47,7 +47,7 @@ const EmailConfirm = () => {
           // Redirect after a short delay
           setTimeout(() => {
             navigate(next, { replace: true });
-          }, 2000);
+          }, 3000);
 
         } catch (error: any) {
           console.error('Email confirmation failed:', error);
