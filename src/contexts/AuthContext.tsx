@@ -120,6 +120,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) {
         console.error('Signup error:', error);
+        
+        // Handle specific signup errors
+        if (error.message === 'User already registered') {
+          return { 
+            error: { 
+              message: 'An account with this email already exists. Please try signing in instead, or use the "Resend Confirmation" option if you haven\'t confirmed your email yet.'
+            } 
+          };
+        }
+        
         return { error };
       }
       
@@ -181,21 +191,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Sign in response:', { data, error });
       
       if (error) {
-        // Check if it's an unconfirmed account
+        console.error('Sign in error details:', error);
+        
+        // Handle different types of authentication errors
         if (error.message === 'Invalid login credentials') {
-          // Try to determine if account exists but unconfirmed by attempting password reset
-          const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/auth/confirm`
-          });
-          
-          if (!resetError) {
-            return { 
-              error: { 
-                message: 'Account not confirmed. Please check your email for the confirmation link or click "Resend Confirmation" below.' 
-              } 
-            };
-          }
+          return { 
+            error: { 
+              message: 'Invalid email or password. Please check your credentials and try again.'
+            } 
+          };
+        } else if (error.message === 'Email not confirmed') {
+          return { 
+            error: { 
+              message: 'Please check your email and click the confirmation link before signing in. Check your spam folder if needed.'
+            } 
+          };
+        } else if (error.message?.includes('signup') || error.message?.includes('confirm')) {
+          return { 
+            error: { 
+              message: 'Account not confirmed. Please check your email for the confirmation link or click "Resend Confirmation" below.'
+            } 
+          };
         }
+        
         return { error };
       }
       

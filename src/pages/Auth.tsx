@@ -90,9 +90,9 @@ const Auth = () => {
         console.error('Signup form error:', error);
         setError(error.message || 'An error occurred during signup');
       } else {
-        setMessage('Account created! Please check your email to confirm your account. Check your spam folder if you don\'t see it.');
-        // Clear form
-        setEmail('');
+        setMessage('Account created successfully! 📧 We\'ve sent a confirmation email to ' + email + '. Please check your inbox (and spam folder) and click the confirmation link to activate your account. The link expires in 24 hours.');
+        setShowResend(true);
+        // Don't clear the email field so user can resend confirmation
         setPassword('');
         setName('');
       }
@@ -149,8 +149,12 @@ const Auth = () => {
         console.error('Signin form error:', error);
         setError(error.message || 'An error occurred during signin');
         
-        // Show resend button if account needs confirmation
-        if (error.message && error.message.includes('not confirmed')) {
+        // Show resend button for confirmation-related errors
+        if (error.message && (
+          error.message.includes('not confirmed') || 
+          error.message.includes('confirmation') ||
+          error.message.includes('check your email')
+        )) {
           setShowResend(true);
         }
       } else {
