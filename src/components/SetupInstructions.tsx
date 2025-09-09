@@ -73,7 +73,10 @@ const SetupInstructions = () => {
 
         <Alert className="border-amber-200 bg-amber-50">
           <AlertDescription className="text-amber-800">
-            <strong>Note:</strong> After disabling email confirmation, users will be able to sign up and sign in immediately without needing to verify their email address.
+            <div className="space-y-2">
+              <p><strong>Note:</strong> After disabling email confirmation, users will be able to sign up and sign in immediately without needing to verify their email address.</p>
+              <p><strong>Password Reset:</strong> The "Forgot Password" feature is enabled and will send reset links to users' email addresses.</p>
+            </div>
           </AlertDescription>
         </Alert>
       </CardContent>

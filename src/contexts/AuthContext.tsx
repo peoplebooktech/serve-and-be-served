@@ -15,6 +15,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   resendConfirmation: (email: string) => Promise<{ error: any }>;
+  forgotPassword: (email: string) => Promise<{ error: any }>;
+  resetPassword: (password: string) => Promise<{ error: any }>;
   getUserRoles: (userId: string) => Promise<AppRole[]>;
   assignUserRole: (userId: string, role: AppRole) => Promise<{ error: any }>;
   loading: boolean;
@@ -239,6 +241,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const forgotPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+      
+      console.log('Forgot password response:', { error });
+      return { error };
+    } catch (err: any) {
+      console.error('Forgot password exception:', err);
+      return { error: err };
+    }
+  };
+
+  const resetPassword = async (password: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+      
+      console.log('Reset password response:', { error });
+      return { error };
+    } catch (err: any) {
+      console.error('Reset password exception:', err);
+      return { error: err };
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -250,6 +280,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signOut,
     resendConfirmation,
+    forgotPassword,
+    resetPassword,
     getUserRoles,
     assignUserRole,
     loading,

@@ -32,7 +32,9 @@ const Auth = () => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
-  const { signUp, signIn, user } = useAuth();
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const { signUp, signIn, forgotPassword, user } = useAuth();
   const navigate = useNavigate();
 
   const roles = [
@@ -105,9 +107,37 @@ const Auth = () => {
     setLoading(false);
   };
 
-  const handleResendConfirmation = async () => {
-    // This function is no longer needed since email confirmation is disabled
-    setError('Email confirmation has been disabled. Please contact support if you need help.');
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail) {
+      setError('Please enter your email address');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const { error } = await forgotPassword(forgotEmail);
+
+      if (error) {
+        console.error('Forgot password error:', error);
+        setError(error.message || 'An error occurred sending the reset email');
+      } else {
+        setMessage('Password reset link sent! Check your email inbox.');
+        setForgotEmail('');
+        setTimeout(() => {
+          setShowForgotPassword(false);
+          setMessage('');
+        }, 5000);
+      }
+    } catch (err: any) {
+      console.error('Forgot password exception:', err);
+      setError('An unexpected error occurred. Please try again.');
+    }
+    
+    setLoading(false);
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -164,52 +194,110 @@ const Auth = () => {
                 </TabsList>
 
                 <TabsContent value="signin" className="space-y-4 mt-6">
-                  <form onSubmit={handleSignIn} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signin-email">Email</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                        <Input
-                          id="signin-email"
-                          type="email"
-                          placeholder="Enter your email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="pl-10"
-                          required
-                        />
+                  {!showForgotPassword ? (
+                    <form onSubmit={handleSignIn} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="signin-email">Email</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                          <Input
+                            id="signin-email"
+                            type="email"
+                            placeholder="Enter your email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="pl-10"
+                            required
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signin-password">Password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                        <Input
-                          id="signin-password"
-                          type="password"
-                          placeholder="Enter your password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className="pl-10"
-                          required
-                        />
+                      <div className="space-y-2">
+                        <Label htmlFor="signin-password">Password</Label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                          <Input
+                            id="signin-password"
+                            type="password"
+                            placeholder="Enter your password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="pl-10"
+                            required
+                          />
+                        </div>
                       </div>
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:from-peoplebook-purple/90 hover:to-peoplebook-blue/90"
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Signing In...
+                          </>
+                        ) : (
+                          'Sign In'
+                        )}
+                      </Button>
+                      <div className="text-center">
+                        <button
+                          type="button"
+                          onClick={() => setShowForgotPassword(true)}
+                          className="text-sm text-peoplebook-blue hover:text-peoplebook-purple transition-colors"
+                        >
+                          Forgot your password?
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="text-center mb-4">
+                        <h3 className="text-lg font-semibold text-peoplebook-text">Reset Your Password</h3>
+                        <p className="text-sm text-slate-600">Enter your email and we'll send you a reset link</p>
+                      </div>
+                      <form onSubmit={handleForgotPassword} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="forgot-email">Email</Label>
+                          <div className="relative">
+                            <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                            <Input
+                              id="forgot-email"
+                              type="email"
+                              placeholder="Enter your email"
+                              value={forgotEmail}
+                              onChange={(e) => setForgotEmail(e.target.value)}
+                              className="pl-10"
+                              required
+                            />
+                          </div>
+                        </div>
+                        <Button 
+                          type="submit" 
+                          className="w-full bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:from-peoplebook-purple/90 hover:to-peoplebook-blue/90"
+                          disabled={loading}
+                        >
+                          {loading ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Sending Reset Link...
+                            </>
+                          ) : (
+                            'Send Reset Link'
+                          )}
+                        </Button>
+                        <div className="text-center">
+                          <button
+                            type="button"
+                            onClick={() => setShowForgotPassword(false)}
+                            className="text-sm text-peoplebook-blue hover:text-peoplebook-purple transition-colors"
+                          >
+                            Back to Sign In
+                          </button>
+                        </div>
+                      </form>
                     </div>
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:from-peoplebook-purple/90 hover:to-peoplebook-blue/90"
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Signing In...
-                        </>
-                      ) : (
-                        'Sign In'
-                      )}
-                    </Button>
-                  </form>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="signup" className="space-y-4 mt-6">
