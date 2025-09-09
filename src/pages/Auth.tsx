@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { AuthDebug } from '@/components/AuthDebug';
+
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -542,8 +542,6 @@ const Auth = () => {
               )}
             </CardContent>
           </Card>
-          
-          <AuthDebug />
         </div>
       </div>
 
