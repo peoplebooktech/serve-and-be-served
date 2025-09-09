@@ -6,9 +6,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import RoleCard from "@/components/RoleCard";
 import VerticalCard from "@/components/VerticalCard";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -224,6 +225,7 @@ const Index = () => {
               icon={<GraduationCap className="w-8 h-8" />}
               bgColor="border-gradient-purple"
               btnText="Become a Consumer"
+              onClick={() => navigate('/profiles/add')}
             />
             
             <RoleCard 
@@ -232,6 +234,7 @@ const Index = () => {
               icon={<Lightbulb className="w-8 h-8" />}
               bgColor="border-gradient-blue"
               btnText="Become a Producer"
+              onClick={() => navigate('/profiles/add')}
             />
             
             <RoleCard 
@@ -240,6 +243,7 @@ const Index = () => {
               icon={<HandHeart className="w-8 h-8" />}
               bgColor="border-gradient-green"
               btnText="Join as Ad-Hoc"
+              onClick={() => navigate('/profiles/add')}
             />
           </div>
         </div>
