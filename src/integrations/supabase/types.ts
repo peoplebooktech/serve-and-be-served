@@ -82,6 +82,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_user_role: {
+        Args: {
+          target_role: Database["public"]["Enums"]["app_role"]
+          target_user_id: string
+        }
+        Returns: undefined
+      }
       get_public_profile_by_id: {
         Args: { profile_id: string }
         Returns: {
@@ -126,6 +133,13 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      remove_user_role: {
+        Args: {
+          target_role: Database["public"]["Enums"]["app_role"]
+          target_user_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
