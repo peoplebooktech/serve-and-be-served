@@ -79,42 +79,7 @@ export type Database = {
       }
     }
     Views: {
-      public_profiles: {
-        Row: {
-          bio: string | null
-          company: string | null
-          created_at: string | null
-          id: string | null
-          image_url: string | null
-          name: string | null
-          skills: string[] | null
-          title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          bio?: string | null
-          company?: string | null
-          created_at?: string | null
-          id?: string | null
-          image_url?: string | null
-          name?: string | null
-          skills?: string[] | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          bio?: string | null
-          company?: string | null
-          created_at?: string | null
-          id?: string | null
-          image_url?: string | null
-          name?: string | null
-          skills?: string[] | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       get_public_profile_by_id: {
