@@ -18,6 +18,8 @@ import Profiles from "./pages/Profiles";
 import ProfileDetail from "./pages/ProfileDetail";
 import AddProfile from "./pages/AddProfile";
 import EditProfile from "./pages/EditProfile";
+import CreatePost from "./pages/CreatePost";
+import Messages from "./pages/Messages";
 import Auth from "./pages/Auth";
 import EmailConfirm from "./pages/EmailConfirm";
 
@@ -49,6 +51,8 @@ const App = () => (
             <Route path="/profiles/add" element={<AddProfile />} />
             <Route path="/profiles/:id" element={<ProfileDetail />} />
             <Route path="/profiles/:id/edit" element={<EditProfile />} />
+            <Route path="/create-post" element={<CreatePost />} />
+            <Route path="/messages" element={<Messages />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

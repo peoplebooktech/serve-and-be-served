@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link, useParams } from "react-router-dom";
-import { ArrowLeft, Save, Edit2 } from "lucide-react";
+import { ArrowLeft, Save, Edit2, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,6 +35,8 @@ const EditProfile = () => {
 
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [enhancedBio, setEnhancedBio] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -87,6 +89,65 @@ const EditProfile = () => {
       ...prev,
       [field]: value
     }));
+    // Clear enhanced bio when user manually edits bio
+    if (field === 'bio') {
+      setEnhancedBio('');
+    }
+  };
+
+  const handleEnhanceBio = async () => {
+    if (!formData.bio.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a bio to enhance",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsEnhancing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-profile-enhancer', {
+        body: {
+          bio: formData.bio,
+          skills: formData.skills.split(',').map(s => s.trim()).filter(Boolean),
+          title: formData.title,
+          company: formData.company,
+          role: 'Consumer' // You might want to get this from user data
+        }
+      });
+
+      if (error) throw error;
+      if (!data?.enhancedBio) throw new Error('No enhanced bio received');
+
+      setEnhancedBio(data.enhancedBio);
+      toast({
+        title: "Success",
+        description: "Bio enhanced! Review and accept or keep your original.",
+      });
+    } catch (error) {
+      console.error('Error enhancing bio:', error);
+      toast({
+        title: "Error",
+        description: "Failed to enhance bio. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
+  const acceptEnhancedBio = () => {
+    setFormData(prev => ({ ...prev, bio: enhancedBio }));
+    setEnhancedBio('');
+    toast({
+      title: "Applied",
+      description: "Enhanced bio has been applied to your profile.",
+    });
+  };
+
+  const rejectEnhancedBio = () => {
+    setEnhancedBio('');
   };
 
   const validateForm = () => {
@@ -245,9 +306,31 @@ const EditProfile = () => {
 
                 {/* Bio */}
                 <div className="space-y-2">
-                  <Label htmlFor="bio" className="text-sm font-medium">
-                    Bio
-                  </Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="bio" className="text-sm font-medium">
+                      Bio
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleEnhanceBio}
+                      disabled={isEnhancing || !formData.bio.trim()}
+                      className="text-xs"
+                    >
+                      {isEnhancing ? (
+                        <>
+                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                          Enhancing...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          Improve My Bio
+                        </>
+                      )}
+                    </Button>
+                  </div>
                   <Textarea
                     id="bio"
                     placeholder="Tell us about yourself, your experience, and what you're passionate about..."
@@ -255,6 +338,38 @@ const EditProfile = () => {
                     onChange={(e) => handleInputChange('bio', e.target.value)}
                     rows={4}
                   />
+                  
+                  {/* Enhanced Bio Preview */}
+                  {enhancedBio && (
+                    <div className="mt-4 p-4 border rounded-lg bg-muted/50">
+                      <div className="flex items-center justify-between mb-2">
+                        <Label className="text-sm font-medium text-primary">
+                          ✨ AI-Enhanced Version
+                        </Label>
+                        <div className="space-x-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={rejectEnhancedBio}
+                          >
+                            Keep Original
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={acceptEnhancedBio}
+                            className="bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue text-white"
+                          >
+                            Use Enhanced
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {enhancedBio}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Contact Info */}

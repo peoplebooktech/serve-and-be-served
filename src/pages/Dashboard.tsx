@@ -1,14 +1,17 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Filter, BarChart3, ListFilter } from "lucide-react";
+import { PlusCircle, Filter, BarChart3, ListFilter, Sparkles, Users } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CollaborationCard from "@/components/CollaborationCard";
 import MilestoneTracker from "@/components/MilestoneTracker";
+import RecommendationCard from "@/components/RecommendationCard";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data
 const collaborations = [
@@ -71,7 +74,58 @@ const activeMilestones = [
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
+  const [recommendations, setRecommendations] = useState([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+  const { toast } = useToast();
   const navigate = useNavigate();
+
+  const fetchAIRecommendations = async () => {
+    setLoadingRecommendations(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get current user profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError || !profile) {
+        console.log('No profile found for recommendations');
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('ai-recommendations', {
+        body: {
+          userId: user.id,
+          userSkills: profile.skills || [],
+          userRole: 'Consumer', // You might want to get this from user data
+          userBio: profile.bio || ''
+        }
+      });
+
+      if (error) throw error;
+      if (data?.recommendations) {
+        setRecommendations(data.recommendations);
+      }
+    } catch (error) {
+      console.error('Error fetching AI recommendations:', error);
+      toast({
+        title: "Note",
+        description: "AI recommendations are loading in the background.",
+        variant: "default",
+      });
+    } finally {
+      setLoadingRecommendations(false);
+    }
+  };
+
+  // Load recommendations when component mounts
+  useEffect(() => {
+    fetchAIRecommendations();
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -92,11 +146,11 @@ const Dashboard = () => {
               >
                 <Filter className="h-4 w-4" /> Filter
               </Button>
-              <Link to="/profiles/add">
-                <Button className="bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:opacity-90 flex gap-2">
-                  <PlusCircle className="h-4 w-4" /> New Collaboration
-                </Button>
-              </Link>
+                  <Link to="/profiles/add">
+                    <Button className="bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:opacity-90 flex gap-2">
+                      <PlusCircle className="h-4 w-4" /> New Post
+                    </Button>
+                  </Link>
             </div>
           </div>
 
@@ -132,11 +186,11 @@ const Dashboard = () => {
                 
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-xl">Pending Matches</CardTitle>
-                    <CardDescription>Awaiting partner acceptance</CardDescription>
+                    <CardTitle className="text-xl">AI Matches Today</CardTitle>
+                    <CardDescription>New AI-powered recommendations</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold text-peoplebook-orange">2</div>
+                    <div className="text-3xl font-bold text-peoplebook-orange">5</div>
                   </CardContent>
                 </Card>
               </div>
