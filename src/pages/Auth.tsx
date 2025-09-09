@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import SetupInstructions from '@/components/SetupInstructions';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -30,9 +31,8 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [showResend, setShowResend] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const { signUp, signIn, resendConfirmation, user } = useAuth();
+  const { signUp, signIn, user } = useAuth();
   const navigate = useNavigate();
 
   const roles = [
@@ -90,11 +90,12 @@ const Auth = () => {
         console.error('Signup form error:', error);
         setError(error.message || 'An error occurred during signup');
       } else {
-        setMessage('🎉 Account created successfully! We\'ve sent a confirmation email to ' + email + '. \n\n📧 Please check your inbox and click the confirmation link to activate your account. \n\n⚠️ Don\'t forget to check your spam/junk folder if you don\'t see it within a few minutes. \n\n🔗 The confirmation link expires in 24 hours, so please confirm soon!');
-        setShowResend(true);
-        // Don't clear the email field so user can resend confirmation
+        setMessage('🎉 Account created successfully! You are now logged in and can start using Peoplebook.ai.');
+        // Clear form fields
+        setEmail('');
         setPassword('');
         setName('');
+        // Redirect will happen automatically via useEffect when user state updates
       }
     } catch (err: any) {
       console.error('Form submission error:', err);
@@ -105,29 +106,8 @@ const Auth = () => {
   };
 
   const handleResendConfirmation = async () => {
-    if (!email) {
-      setError('Please enter your email address');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    setMessage('');
-
-    try {
-      const { error } = await resendConfirmation(email);
-
-      if (error) {
-        setError(error.message || 'Failed to resend confirmation email');
-      } else {
-        setMessage('Confirmation email sent! Please check your inbox and spam folder.');
-        setShowResend(false);
-      }
-    } catch (err: any) {
-      setError('Failed to resend confirmation email. Please try again.');
-    }
-
-    setLoading(false);
+    // This function is no longer needed since email confirmation is disabled
+    setError('Email confirmation has been disabled. Please contact support if you need help.');
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -140,7 +120,6 @@ const Auth = () => {
     setLoading(true);
     setError('');
     setMessage('');
-    setShowResend(false);
 
     try {
       const { error } = await signIn(email, password);
@@ -148,15 +127,6 @@ const Auth = () => {
       if (error) {
         console.error('Signin form error:', error);
         setError(error.message || 'An error occurred during signin');
-        
-        // Show resend button for confirmation-related errors
-        if (error.message && (
-          error.message.includes('not confirmed') || 
-          error.message.includes('confirmation') ||
-          error.message.includes('check your email')
-        )) {
-          setShowResend(true);
-        }
       } else {
         navigate('/profiles');
       }
@@ -417,25 +387,6 @@ const Auth = () => {
               {error && (
                 <Alert className="mt-4 border-destructive">
                   <AlertDescription className="text-destructive">{error}</AlertDescription>
-                  {showResend && (
-                    <div className="mt-3">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={handleResendConfirmation}
-                        disabled={loading}
-                      >
-                        {loading ? (
-                          <>
-                            <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                            Sending...
-                          </>
-                        ) : (
-                          'Resend Confirmation Email'
-                        )}
-                      </Button>
-                    </div>
-                  )}
                 </Alert>
               )}
 
@@ -445,33 +396,12 @@ const Auth = () => {
                       <AlertDescription className="text-green-700 font-medium">
                         {message}
                       </AlertDescription>
-                      {showResend && (
-                        <div className="mt-4 p-3 bg-white rounded border border-green-200">
-                          <p className="text-sm text-slate-600 mb-2">
-                            Didn't receive the email? Check your spam folder first, then:
-                          </p>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={handleResendConfirmation}
-                            disabled={loading}
-                            className="w-full"
-                          >
-                            {loading ? (
-                              <>
-                                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                                Sending...
-                              </>
-                            ) : (
-                              'Resend Confirmation Email'
-                            )}
-                          </Button>
-                        </div>
-                      )}
                     </Alert>
                   )}
             </CardContent>
           </Card>
+
+          <SetupInstructions />
         </div>
       </div>
 

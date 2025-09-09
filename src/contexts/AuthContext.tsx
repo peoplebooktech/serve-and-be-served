@@ -114,11 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, name: string, role: AppRole) => {
     try {
-      // Use a proper confirmation URL 
-      const redirectUrl = `${window.location.origin}/auth/confirm`;
-      
       console.log('Starting signup process...');
-      console.log('Sign up redirect URL:', redirectUrl);
       console.log('Email:', email);
       console.log('Role:', role);
       
@@ -126,7 +122,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
           data: {
             name: name,
             role: role
@@ -143,7 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (error.message === 'User already registered') {
           return { 
             error: { 
-              message: 'An account with this email already exists. Please try signing in instead, or use the "Resend Confirmation" option if you haven\'t confirmed your email yet.'
+              message: 'An account with this email already exists. Please try signing in instead.'
             } 
           };
         }
@@ -151,13 +146,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
       
-      // If user is created and confirmed immediately, assign the role
-      if (data?.user && data?.session) {
-        console.log('User created and confirmed, role will be assigned automatically by trigger');
-      }
-      
-      if (data?.user && !data?.session) {
-        console.log('User created, confirmation email should be sent. Profile and role will be created upon email confirmation.');
+      // Check if user was created successfully
+      if (data?.user) {
+        if (data?.session) {
+          console.log('User created and signed in immediately - no email confirmation required');
+        } else {
+          console.log('User created but needs email confirmation - check Supabase settings to disable this');
+        }
       }
       
       return { error: null };
@@ -212,18 +207,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { 
             error: { 
               message: 'Invalid email or password. Please check your credentials and try again.'
-            } 
-          };
-        } else if (error.message === 'Email not confirmed') {
-          return { 
-            error: { 
-              message: 'Please check your email and click the confirmation link before signing in. Check your spam folder if needed.'
-            } 
-          };
-        } else if (error.message?.includes('signup') || error.message?.includes('confirm')) {
-          return { 
-            error: { 
-              message: 'Account not confirmed. Please check your email for the confirmation link or click "Resend Confirmation" below.'
             } 
           };
         }
