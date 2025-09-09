@@ -5,9 +5,20 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAuth } from '@/contexts/AuthContext';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useAuth, AppRole } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Mail, Lock, User } from 'lucide-react';
+import { 
+  Loader2, 
+  Mail, 
+  Lock, 
+  User, 
+  GraduationCap, 
+  Lightbulb, 
+  HandHeart,
+  ArrowRight,
+  CheckCircle
+} from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -15,12 +26,38 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [selectedRole, setSelectedRole] = useState<AppRole>('consumer');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [showResend, setShowResend] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
   const { signUp, signIn, resendConfirmation, user } = useAuth();
   const navigate = useNavigate();
+
+  const roles = [
+    {
+      id: 'consumer' as AppRole,
+      title: 'Consumer',
+      description: 'Individuals, communities, or organizations seeking AI-matched expertise and knowledge',
+      icon: GraduationCap,
+      color: 'from-blue-500 to-indigo-600'
+    },
+    {
+      id: 'producer' as AppRole,
+      title: 'Producer',
+      description: 'Share your expertise through our AI-powered platform and guide others to success',
+      icon: Lightbulb,
+      color: 'from-purple-500 to-pink-600'
+    },
+    {
+      id: 'ad_hoc' as AppRole,
+      title: 'Ad-Hoc',
+      description: 'Represent and facilitate AI-enhanced connections between consumers and producers',
+      icon: HandHeart,
+      color: 'from-green-500 to-teal-600'
+    }
+  ];
 
   useEffect(() => {
     if (user) {
@@ -47,7 +84,7 @@ const Auth = () => {
     console.log('Form submitted for signup');
 
     try {
-      const { error } = await signUp(email, password, name);
+      const { error } = await signUp(email, password, name, selectedRole);
 
       if (error) {
         console.error('Signup form error:', error);
@@ -202,67 +239,174 @@ const Auth = () => {
                 </TabsContent>
 
                 <TabsContent value="signup" className="space-y-4 mt-6">
-                  <form onSubmit={handleSignUp} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-name">Full Name</Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                        <Input
-                          id="signup-name"
-                          type="text"
-                          placeholder="Enter your full name"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          className="pl-10"
-                          required
-                        />
+                  {currentStep === 1 && (
+                    <div className="space-y-6">
+                      <div className="text-center mb-6">
+                        <div className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-peoplebook-purple/10 to-peoplebook-blue/10 rounded-full mb-4">
+                          <span className="text-sm font-medium text-peoplebook-purple">Step 1</span>
+                        </div>
+                        <h3 className="text-2xl font-bold text-peoplebook-text mb-2">Create Your Profile</h3>
+                        <p className="text-slate-600 leading-relaxed">
+                          Begin by signing up and creating your profile on Peoplebook.ai. Select your role as a Consumer (seeking knowledge), Producer (sharing expertise), or Ad-Hoc (facilitating connections).
+                        </p>
+                      </div>
+
+                      <form onSubmit={(e) => { e.preventDefault(); setCurrentStep(2); }} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="signup-name">Full Name</Label>
+                          <div className="relative">
+                            <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                            <Input
+                              id="signup-name"
+                              type="text"
+                              placeholder="Enter your full name"
+                              value={name}
+                              onChange={(e) => setName(e.target.value)}
+                              className="pl-10"
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="signup-email">Email</Label>
+                          <div className="relative">
+                            <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                            <Input
+                              id="signup-email"
+                              type="email"
+                              placeholder="Enter your email"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              className="pl-10"
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="signup-password">Password</Label>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                            <Input
+                              id="signup-password"
+                              type="password"
+                              placeholder="Create a password"
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              className="pl-10"
+                              required
+                            />
+                          </div>
+                        </div>
+                        <Button 
+                          type="submit" 
+                          className="w-full bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:from-peoplebook-purple/90 hover:to-peoplebook-blue/90"
+                          disabled={!name || !email || !password}
+                        >
+                          Continue to Role Selection
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                      </form>
+                    </div>
+                  )}
+
+                  {currentStep === 2 && (
+                    <div className="space-y-6">
+                      <div className="text-center mb-6">
+                        <div className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-peoplebook-purple/10 to-peoplebook-blue/10 rounded-full mb-4">
+                          <span className="text-sm font-medium text-peoplebook-purple">Step 2</span>
+                        </div>
+                        <h3 className="text-2xl font-bold text-peoplebook-text mb-2">Select Your Role</h3>
+                        <p className="text-slate-600 leading-relaxed">
+                          Choose how you want to participate in our AI-powered ecosystem
+                        </p>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="grid gap-4">
+                          {roles.map((role) => {
+                            const IconComponent = role.icon;
+                            const isSelected = selectedRole === role.id;
+                            
+                            return (
+                              <div
+                                key={role.id}
+                                className={`relative p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                                  isSelected
+                                    ? 'border-peoplebook-blue bg-gradient-to-r from-peoplebook-blue/5 to-peoplebook-purple/5'
+                                    : 'border-slate-200 hover:border-peoplebook-blue/50'
+                                }`}
+                                onClick={() => setSelectedRole(role.id)}
+                              >
+                                <div className="flex items-start space-x-4">
+                                  <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${role.color} flex items-center justify-center flex-shrink-0`}>
+                                    <IconComponent className="w-6 h-6 text-white" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center">
+                                      <h4 className="text-lg font-semibold text-peoplebook-text">{role.title}</h4>
+                                      {isSelected && (
+                                        <CheckCircle className="w-5 h-5 text-peoplebook-blue ml-2" />
+                                      )}
+                                    </div>
+                                    <p className="text-sm text-slate-600 mt-1 leading-relaxed">
+                                      {role.description}
+                                    </p>
+                                  </div>
+                                </div>
+                                <input
+                                  type="radio"
+                                  name="role"
+                                  value={role.id}
+                                  checked={selectedRole === role.id}
+                                  onChange={(e) => setSelectedRole(e.target.value as AppRole)}
+                                  className="absolute top-4 right-4"
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <div className="space-y-3 mt-6 p-4 bg-slate-50 rounded-lg">
+                          <div className="flex items-center space-x-3 text-sm text-slate-600">
+                            <ArrowRight className="w-4 h-4 text-peoplebook-blue" />
+                            <span>Specify your category (individual, group/community, or corporate)</span>
+                          </div>
+                          <div className="flex items-center space-x-3 text-sm text-slate-600">
+                            <ArrowRight className="w-4 h-4 text-peoplebook-blue" />
+                            <span>Define your interests, needs, or areas of expertise</span>
+                          </div>
+                          <div className="flex items-center space-x-3 text-sm text-slate-600">
+                            <ArrowRight className="w-4 h-4 text-peoplebook-blue" />
+                            <span>Set your availability and preferred collaboration timeframes</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex space-x-3">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setCurrentStep(1)}
+                          className="flex-1"
+                        >
+                          Back
+                        </Button>
+                        <Button 
+                          onClick={handleSignUp}
+                          className="flex-1 bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:from-peoplebook-purple/90 hover:to-peoplebook-blue/90"
+                          disabled={loading}
+                        >
+                          {loading ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Creating Profile...
+                            </>
+                          ) : (
+                            'Create Your Profile'
+                          )}
+                        </Button>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                        <Input
-                          id="signup-email"
-                          type="email"
-                          placeholder="Enter your email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="pl-10"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-password">Password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                        <Input
-                          id="signup-password"
-                          type="password"
-                          placeholder="Create a password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className="pl-10"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:from-peoplebook-purple/90 hover:to-peoplebook-blue/90"
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Creating Account...
-                        </>
-                      ) : (
-                        'Create Account'
-                      )}
-                    </Button>
-                  </form>
+                  )}
                 </TabsContent>
               </Tabs>
 
