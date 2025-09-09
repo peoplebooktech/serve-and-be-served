@@ -22,6 +22,7 @@ import CreatePost from "./pages/CreatePost";
 import Messages from "./pages/Messages";
 import Auth from "./pages/Auth";
 import EmailConfirm from "./pages/EmailConfirm";
+import ResetPassword from "./pages/ResetPassword";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -38,8 +39,9 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/auth/confirm" element={<EmailConfirm />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/auth/confirm" element={<EmailConfirm />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/about" element={<About />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/dashboard" element={<Dashboard />} />

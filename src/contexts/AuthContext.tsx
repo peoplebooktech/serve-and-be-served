@@ -144,6 +144,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (data?.user && !data?.session) {
         console.log('User created, confirmation email should be sent');
+        
+        // Send welcome email after successful signup
+        try {
+          console.log('Sending welcome email...');
+          await supabase.functions.invoke('send-welcome-email', {
+            body: {
+              email: email,
+              name: name,
+              role: role
+            }
+          });
+          console.log('Welcome email sent successfully');
+        } catch (emailError) {
+          console.error('Failed to send welcome email:', emailError);
+          // Don't fail the signup if email fails
+        }
       }
       
       return { error: null };

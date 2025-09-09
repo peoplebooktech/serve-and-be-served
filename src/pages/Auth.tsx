@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { 
   Loader2, 
@@ -31,6 +32,8 @@ const Auth = () => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [showResend, setShowResend] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
   const { signUp, signIn, resendConfirmation, user } = useAuth();
   const navigate = useNavigate();
@@ -168,6 +171,36 @@ const Auth = () => {
     setLoading(false);
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotPasswordEmail) {
+      setError('Please enter your email address');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const { error } = await supabase.functions.invoke('send-reset-email', {
+        body: { email: forgotPasswordEmail }
+      });
+
+      if (error) {
+        setError(error.message || 'Failed to send password reset email');
+      } else {
+        setMessage('Password reset email sent! Please check your inbox and spam folder.');
+        setShowForgotPassword(false);
+        setForgotPasswordEmail('');
+      }
+    } catch (err: any) {
+      setError('Failed to send password reset email. Please try again.');
+    }
+
+    setLoading(false);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -239,7 +272,55 @@ const Auth = () => {
                         'Sign In'
                       )}
                     </Button>
+                    
+                    <div className="text-center mt-4">
+                      <Button
+                        variant="link"
+                        onClick={() => {
+                          setShowForgotPassword(true);
+                          setForgotPasswordEmail(email);
+                        }}
+                        className="text-sm text-peoplebook-blue hover:text-peoplebook-purple"
+                      >
+                        Forgot your password?
+                      </Button>
+                    </div>
                   </form>
+
+                  {showForgotPassword && (
+                    <div className="mt-6 p-4 bg-slate-50 rounded-lg">
+                      <h4 className="font-semibold text-slate-700 mb-3">Reset Password</h4>
+                      <form onSubmit={handleForgotPassword} className="space-y-3">
+                        <div>
+                          <Label htmlFor="forgot-email">Email Address</Label>
+                          <Input
+                            id="forgot-email"
+                            type="email"
+                            placeholder="Enter your email"
+                            value={forgotPasswordEmail}
+                            onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button
+                            type="submit"
+                            disabled={loading}
+                            className="flex-1"
+                          >
+                            {loading ? 'Sending...' : 'Send Reset Email'}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowForgotPassword(false)}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="signup" className="space-y-4 mt-6">
