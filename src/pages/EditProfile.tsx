@@ -36,6 +36,7 @@ const EditProfile = () => {
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [enhancedBio, setEnhancedBio] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -148,6 +149,50 @@ const EditProfile = () => {
 
   const rejectEnhancedBio = () => {
     setEnhancedBio('');
+  };
+
+  const handleGenerateProfileImage = async () => {
+    if (!formData.name.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter your name first to generate a profile image",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingImage(true);
+    try {
+      const prompt = `Professional headshot of ${formData.name}${formData.title ? `, ${formData.title}` : ''}${formData.company ? ` at ${formData.company}` : ''}. Business professional, confident, approachable.`;
+      
+      const { data, error } = await supabase.functions.invoke('ai-image-generator', {
+        body: {
+          type: 'profile_picture',
+          prompt: prompt,
+          name: formData.name,
+          title: formData.title,
+          company: formData.company
+        }
+      });
+
+      if (error) throw error;
+      if (!data?.imageUrl) throw new Error('No image generated');
+
+      setFormData(prev => ({ ...prev, image_url: data.imageUrl }));
+      toast({
+        title: "Success",
+        description: "AI profile image generated! You can edit the URL if needed.",
+      });
+    } catch (error) {
+      console.error('Error generating profile image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate profile image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingImage(false);
+    }
   };
 
   const validateForm = () => {
@@ -408,18 +453,40 @@ const EditProfile = () => {
 
                 {/* Profile Image URL */}
                 <div className="space-y-2">
-                  <Label htmlFor="image_url" className="text-sm font-medium">
-                    Profile Image URL
-                  </Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="image_url" className="text-sm font-medium">
+                      Profile Image URL
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGenerateProfileImage}
+                      disabled={isGeneratingImage || !formData.name.trim()}
+                      className="text-xs"
+                    >
+                      {isGeneratingImage ? (
+                        <>
+                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          Generate AI Image
+                        </>
+                      )}
+                    </Button>
+                  </div>
                   <Input
                     id="image_url"
                     type="url"
-                    placeholder="https://example.com/profile-image.jpg"
+                    placeholder="https://example.com/profile-image.jpg or generate with AI"
                     value={formData.image_url}
                     onChange={(e) => handleInputChange('image_url', e.target.value)}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Optional: Link to your profile image
+                    Enter a URL or generate a professional headshot with AI
                   </p>
                 </div>
 

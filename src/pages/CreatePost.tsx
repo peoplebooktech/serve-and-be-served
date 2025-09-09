@@ -16,6 +16,7 @@ interface PostForm {
   title: string;
   content: string;
   category: string;
+  image_url: string;
 }
 
 const CreatePost = () => {
@@ -23,10 +24,12 @@ const CreatePost = () => {
     title: "",
     content: "",
     category: "General",
+    image_url: "",
   });
   const [aiAssist, setAiAssist] = useState(false);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [isGeneratingHashtags, setIsGeneratingHashtags] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [enhancedContent, setEnhancedContent] = useState('');
   const [suggestedHashtags, setSuggestedHashtags] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -144,6 +147,51 @@ const CreatePost = () => {
     const newContent = currentContent + (currentContent.endsWith(' ') ? '' : ' ') + hashtag;
     setFormData(prev => ({ ...prev, content: newContent }));
     if (enhancedContent) setEnhancedContent('');
+  };
+
+  const generatePostImage = async () => {
+    const contentToUse = enhancedContent || formData.content;
+    if (!formData.title.trim() && !contentToUse.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a title or content first to generate an image",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingImage(true);
+    try {
+      const prompt = `${formData.title}. ${contentToUse.slice(0, 200)}. Category: ${formData.category}`;
+      
+      const { data, error } = await supabase.functions.invoke('ai-image-generator', {
+        body: {
+          type: 'post_image',
+          prompt: prompt,
+          content: contentToUse,
+          title: formData.title,
+          category: formData.category
+        }
+      });
+
+      if (error) throw error;
+      if (!data?.imageUrl) throw new Error('No image generated');
+
+      setFormData(prev => ({ ...prev, image_url: data.imageUrl }));
+      toast({
+        title: "Success",
+        description: "AI post image generated! You can edit the URL if needed.",
+      });
+    } catch (error) {
+      console.error('Error generating post image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate post image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingImage(false);
+    }
   };
 
   const validateForm = () => {
@@ -313,6 +361,25 @@ const CreatePost = () => {
                             </>
                           )}
                         </Button>
+                        <Button
+                          type="button"  
+                          variant="outline"
+                          size="sm"
+                          onClick={generatePostImage}
+                          disabled={isGeneratingImage}
+                        >
+                          {isGeneratingImage ? (
+                            <>
+                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3 h-3 mr-1" />
+                              Image
+                            </>
+                          )}
+                        </Button>
                       </div>
                     )}
                   </div>
@@ -378,6 +445,41 @@ const CreatePost = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Post Image */}
+                <div className="space-y-2">
+                  <Label htmlFor="image_url" className="text-sm font-medium">
+                    Post Image URL (Optional)
+                  </Label>
+                  <Input
+                    id="image_url"
+                    type="url"
+                    placeholder="https://example.com/image.jpg or generate with AI"
+                    value={formData.image_url}
+                    onChange={(e) => handleInputChange('image_url', e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Optional: Add an image URL or generate one with AI using the button above
+                  </p>
+                </div>
+
+                {/* Image Preview */}
+                {formData.image_url && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Image Preview</Label>
+                    <div className="w-full max-w-md rounded-lg overflow-hidden bg-muted">
+                      <img
+                        src={formData.image_url}
+                        alt="Post image preview"
+                        className="w-full h-auto object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* Submit Button */}
                 <div className="flex items-center justify-end space-x-4 pt-6">
