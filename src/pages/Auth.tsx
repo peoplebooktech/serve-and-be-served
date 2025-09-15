@@ -64,6 +64,7 @@ const Auth = () => {
   ];
 
   useEffect(() => {
+    // Redirect authenticated users to profiles page
     if (user) {
       navigate('/profiles');
     }
@@ -103,9 +104,10 @@ const Auth = () => {
         }
       } else {
         console.log('Signup successful, showing success message');
-        setMessage('Account created successfully! 📧 We\'ve sent a confirmation email to ' + email + '. Please check your inbox (and spam folder) and click the confirmation link to activate your account. The link expires in 24 hours.');
+        setMessage('Account created successfully! 📧 Please check your email (including spam folder) and click the confirmation link to activate your account.');
         setShowResend(true);
-        // Don't clear the email field so user can resend confirmation
+        setCurrentStep(1); // Reset to step 1 to allow signing in after confirmation
+        // Clear form for security
         setPassword('');
         setName('');
       }
@@ -164,19 +166,25 @@ const Auth = () => {
 
       if (error) {
         console.error('Signin form error:', error);
-        setError(error.message || 'An error occurred during signin');
         
-        // Show resend button for confirmation-related errors
-        if (error.message && (
-          error.message.includes('not confirmed') || 
-          error.message.includes('confirmation') ||
-          error.message.includes('check your email')
-        )) {
+        // Provide more user-friendly error messages and guidance
+        if (error.message?.includes('Invalid login credentials')) {
+          setError('Invalid email or password. Please check your credentials and try again.');
+        } else if (error.message?.includes('not confirmed') || 
+                   error.message?.includes('confirmation') ||
+                   error.message?.includes('check your email')) {
+          setError('Please confirm your email address first. Check your inbox and spam folder for the confirmation link.');
           setShowResend(true);
+        } else {
+          setError(error.message || 'Sign in failed. Please try again.');
         }
       } else {
         console.log('Sign in successful, navigating to profiles');
-        navigate('/profiles');
+        setMessage('Welcome back! Redirecting to your dashboard...');
+        // Short delay to show success message before redirect
+        setTimeout(() => {
+          navigate('/profiles');
+        }, 1000);
       }
     } catch (err: any) {
       console.error('Form submission error:', err);
@@ -220,11 +228,11 @@ const Auth = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <div className="flex-1 flex items-center justify-center px-4 py-16 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="flex-1 flex items-center justify-center px-4 py-8 sm:py-16 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
         <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold gradient-text">Welcome to PeopleBook.ai</h1>
-            <p className="text-slate-600 mt-2">Join our AI-powered people directory</p>
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold gradient-text">Welcome to PeopleBook.ai</h1>
+            <p className="text-slate-600 mt-2 text-sm sm:text-base">Join our AI-powered people directory</p>
           </div>
 
           <Card className="shadow-xl">
@@ -236,9 +244,9 @@ const Auth = () => {
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="signin" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="signin">Sign In</TabsTrigger>
-                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 mb-6">
+                  <TabsTrigger value="signin" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-peoplebook-purple/10 data-[state=active]:to-peoplebook-blue/10">Sign In</TabsTrigger>
+                  <TabsTrigger value="signup" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-peoplebook-purple/10 data-[state=active]:to-peoplebook-blue/10">Sign Up</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="signin" className="space-y-4 mt-6">
@@ -273,9 +281,16 @@ const Auth = () => {
                         />
                       </div>
                     </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-slate-500">
+                        Password should be at least 6 characters
+                      </div>
+                    </div>
+                    
                     <Button 
                       type="submit" 
-                      className="w-full bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:from-peoplebook-purple/90 hover:to-peoplebook-blue/90"
+                      className="w-full bg-gradient-to-r from-peoplebook-purple to-peoplebook-blue hover:from-peoplebook-purple/90 hover:to-peoplebook-blue/90 transition-all duration-300"
                       disabled={loading}
                     >
                       {loading ? (
@@ -295,7 +310,7 @@ const Auth = () => {
                           setShowForgotPassword(true);
                           setForgotPasswordEmail(email);
                         }}
-                        className="text-sm text-peoplebook-blue hover:text-peoplebook-purple"
+                        className="text-sm text-peoplebook-blue hover:text-peoplebook-purple transition-colors"
                       >
                         Forgot your password?
                       </Button>

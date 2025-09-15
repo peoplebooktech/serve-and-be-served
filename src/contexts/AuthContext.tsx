@@ -96,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, name: string, role: AppRole) => {
     try {
-      // Use a proper confirmation URL 
+      // Use the main site URL for better email confirmation flow
       const redirectUrl = `${window.location.origin}/auth/confirm`;
       
       console.log('Starting signup process...');
