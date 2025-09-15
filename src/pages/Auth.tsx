@@ -63,6 +63,25 @@ const Auth = () => {
     }
   ];
 
+  // Clear all auth state on component mount for fresh start
+  useEffect(() => {
+    // Clear localStorage on mount for fresh start
+    localStorage.removeItem('supabase.auth.token');
+    
+    // Reset all form state
+    setEmail('');
+    setPassword('');
+    setName('');
+    setSelectedRole('consumer');
+    setLoading(false);
+    setError('');
+    setMessage('');
+    setShowResend(false);
+    setShowForgotPassword(false);
+    setForgotPasswordEmail('');
+    setCurrentStep(1);
+  }, []);
+
   useEffect(() => {
     // Redirect authenticated users to profiles page
     if (user) {

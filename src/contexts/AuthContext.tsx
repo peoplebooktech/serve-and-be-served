@@ -54,22 +54,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Clear any existing auth state first
+    setUser(null);
+    setSession(null);
+    setLoading(true);
+
+    // Clear localStorage auth state
+    localStorage.removeItem('supabase.auth.token');
+    
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state change:', event, session?.user?.email);
+        
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setSession(null);
+          setLoading(false);
+          return;
+        }
+        
         setSession(session);
         
         if (session?.user) {
-          // Fetch roles and add to user object
-          const roles = await fetchUserRoles(session.user.id);
-          const userWithRoles = { ...session.user, roles };
-          setUser(userWithRoles);
-          
-          // If user just signed up and has role metadata but no roles in database, assign the role
-          if (event === 'SIGNED_IN' && session.user.user_metadata?.role && roles.length === 0) {
-            console.log('Assigning role from metadata:', session.user.user_metadata.role);
-            await assignUserRole(session.user.id, session.user.user_metadata.role);
+          try {
+            const roles = await fetchUserRoles(session.user.id);
+            setUser({ ...session.user, roles });
+          } catch (error) {
+            console.error('Error fetching user roles:', error);
+            setUser(session.user);
           }
         } else {
           setUser(null);
@@ -78,18 +91,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.email);
-      setSession(session);
-      
-      if (session?.user) {
-        const roles = await fetchUserRoles(session.user.id);
-        const userWithRoles = { ...session.user, roles };
-        setUser(userWithRoles);
+    // Check for initial session after a small delay to ensure clean state
+    const checkInitialSession = async () => {
+      try {
+        // Clear any potential cached session first
+        await supabase.auth.refreshSession();
+        
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        console.log('Initial session check:', initialSession?.user?.email);
+        
+        if (error) {
+          console.error('Error getting initial session:', error);
+          setUser(null);
+          setSession(null);
+          setLoading(false);
+          return;
+        }
+
+        if (initialSession?.user) {
+          try {
+            const roles = await fetchUserRoles(initialSession.user.id);
+            setUser({ ...initialSession.user, roles });
+            setSession(initialSession);
+          } catch (error) {
+            console.error('Error fetching initial user roles:', error);
+            setUser(initialSession.user);
+            setSession(initialSession);
+          }
+        } else {
+          setUser(null);
+          setSession(null);
+        }
+      } catch (error) {
+        console.error('Error in initial session check:', error);
+        setUser(null);
+        setSession(null);
       }
       setLoading(false);
-    });
+    };
+
+    // Use timeout to ensure clean initialization
+    setTimeout(checkInitialSession, 100);
 
     return () => subscription.unsubscribe();
   }, []);
@@ -269,12 +311,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       console.log('Starting sign out process...');
+      
+      // Clear all local state first
+      setUser(null);
+      setSession(null);
+      
+      // Clear localStorage
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.clear();
+      
+      // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Sign out error:', error);
         throw error;
       }
-      console.log('Sign out successful');
+      
+      console.log('Sign out successful - forcing reload for fresh state');
+      
+      // Force reload to ensure completely clean state
+      window.location.reload();
     } catch (err) {
       console.error('Sign out exception:', err);
       throw err;
