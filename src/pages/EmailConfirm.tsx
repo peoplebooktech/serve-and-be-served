@@ -44,9 +44,9 @@ const EmailConfirm = () => {
             description: 'Email confirmed successfully!',
           });
 
-          // Redirect after a short delay
+          // Redirect to peoplebook.ai after a short delay
           setTimeout(() => {
-            navigate(next, { replace: true });
+            window.location.href = 'https://peoplebook.ai';
           }, 3000);
 
         } catch (error: any) {
