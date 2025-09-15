@@ -176,6 +176,36 @@ const Profiles = () => {
     ];
   };
 
+  const getSuggestedSkills = () => {
+    return [
+      "JavaScript",
+      "TypeScript", 
+      "React",
+      "Node.js",
+      "Python",
+      "Java",
+      "C++",
+      "Go",
+      "Rust",
+      "Swift",
+      "Machine Learning",
+      "Data Science",
+      "AI/ML",
+      "Cloud Computing",
+      "AWS",
+      "Azure",
+      "Docker",
+      "Kubernetes",
+      "DevOps",
+      "Product Management",
+      "UI/UX Design",
+      "Marketing",
+      "Sales",
+      "Leadership",
+      "Project Management"
+    ];
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -269,11 +299,33 @@ const Profiles = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all-skills">All skills</SelectItem>
-                {getUniqueSkills()
-                  .filter(skill => skill && skill.trim() !== "")
-                  .map((skill) => (
-                  <SelectItem key={skill} value={skill}>
-                    {skill}
+                
+                {/* Existing skills from profiles */}
+                {getUniqueSkills().length > 0 && (
+                  <>
+                    <div className="px-2 py-1 text-xs font-medium text-slate-500 border-b">
+                      Current Skills
+                    </div>
+                    {getUniqueSkills()
+                      .filter(skill => skill && skill.trim() !== "")
+                      .map((skill) => (
+                      <SelectItem key={skill} value={skill}>
+                        {skill}
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
+                
+                {/* Suggested skills */}
+                <div className="px-2 py-1 text-xs font-medium text-slate-500 border-b">
+                  Suggested Skills
+                </div>
+                {getSuggestedSkills().map((skill) => (
+                  <SelectItem key={`suggested-${skill}`} value={skill}>
+                    <div className="flex items-center">
+                      <span>{skill}</span>
+                      <Badge variant="outline" className="ml-2 text-xs">Popular</Badge>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
