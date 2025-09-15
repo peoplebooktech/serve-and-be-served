@@ -52,7 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
     };
 
     const emailResponse = await resend.emails.send({
-      from: "PeopleBook.ai <welcome@peoplebook.ai>",
+      from: "PeopleBook.ai <onboarding@resend.dev>",
       to: [email],
       subject: "Welcome to PeopleBook.ai! 🎉",
       html: `
