@@ -35,6 +35,14 @@ const Profiles = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    fetchProfiles();
+  }, []);
+
+  useEffect(() => {
+    filterProfiles();
+  }, [profiles, searchTerm, companyFilter, skillFilter]);
+
   // Show loading state if auth is still loading
   if (authLoading) {
     return (
@@ -46,14 +54,6 @@ const Profiles = () => {
       </div>
     );
   }
-
-  useEffect(() => {
-    fetchProfiles();
-  }, []);
-
-  useEffect(() => {
-    filterProfiles();
-  }, [profiles, searchTerm, companyFilter, skillFilter]);
 
   const fetchProfiles = async () => {
     try {
