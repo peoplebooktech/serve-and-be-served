@@ -151,6 +151,31 @@ const Profiles = () => {
     return allSkills.sort();
   };
 
+  const getSuggestedCompanies = () => {
+    return [
+      "Microsoft",
+      "Google",
+      "Apple", 
+      "Amazon",
+      "Meta",
+      "Netflix",
+      "Tesla",
+      "OpenAI",
+      "Anthropic",
+      "Stripe",
+      "Airbnb",
+      "Uber",
+      "Spotify",
+      "Adobe",
+      "Salesforce",
+      "IBM",
+      "Oracle",
+      "NVIDIA",
+      "Intel",
+      "Cisco"
+    ];
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -206,11 +231,33 @@ const Profiles = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all-companies">All companies</SelectItem>
-                {getUniqueCompanies()
-                  .filter(company => company && company.trim() !== "")
-                  .map((company) => (
-                  <SelectItem key={company} value={company}>
-                    {company}
+                
+                {/* Existing companies from profiles */}
+                {getUniqueCompanies().length > 0 && (
+                  <>
+                    <div className="px-2 py-1 text-xs font-medium text-slate-500 border-b">
+                      Current Companies
+                    </div>
+                    {getUniqueCompanies()
+                      .filter(company => company && company.trim() !== "")
+                      .map((company) => (
+                      <SelectItem key={company} value={company}>
+                        {company}
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
+                
+                {/* Suggested companies */}
+                <div className="px-2 py-1 text-xs font-medium text-slate-500 border-b">
+                  Suggested Companies
+                </div>
+                {getSuggestedCompanies().map((company) => (
+                  <SelectItem key={`suggested-${company}`} value={company}>
+                    <div className="flex items-center">
+                      <span>{company}</span>
+                      <Badge variant="outline" className="ml-2 text-xs">Popular</Badge>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
