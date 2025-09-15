@@ -23,6 +23,7 @@ import Messages from "./pages/Messages";
 import Auth from "./pages/Auth";
 import EmailConfirm from "./pages/EmailConfirm";
 import ResetPassword from "./pages/ResetPassword";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -38,24 +39,56 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public routes - accessible without authentication */}
             <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/auth/confirm" element={<EmailConfirm />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/confirm" element={<EmailConfirm />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/about" element={<About />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
-            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/education" element={<Education />} />
             <Route path="/healthcare" element={<Healthcare />} />
             <Route path="/agriculture" element={<Agriculture />} />
             <Route path="/sports" element={<Sports />} />
-            <Route path="/profiles" element={<Profiles />} />
-            <Route path="/profiles/add" element={<AddProfile />} />
-            <Route path="/profiles/:id" element={<ProfileDetail />} />
-            <Route path="/profiles/:id/edit" element={<EditProfile />} />
-            <Route path="/create-post" element={<CreatePost />} />
-            <Route path="/messages" element={<Messages />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            
+            {/* Protected routes - require authentication */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/profiles" element={
+              <ProtectedRoute>
+                <Profiles />
+              </ProtectedRoute>
+            } />
+            <Route path="/profiles/add" element={
+              <ProtectedRoute>
+                <AddProfile />
+              </ProtectedRoute>
+            } />
+            <Route path="/profiles/:id" element={
+              <ProtectedRoute>
+                <ProfileDetail />
+              </ProtectedRoute>
+            } />
+            <Route path="/profiles/:id/edit" element={
+              <ProtectedRoute>
+                <EditProfile />
+              </ProtectedRoute>
+            } />
+            <Route path="/create-post" element={
+              <ProtectedRoute>
+                <CreatePost />
+              </ProtectedRoute>
+            } />
+            <Route path="/messages" element={
+              <ProtectedRoute>
+                <Messages />
+              </ProtectedRoute>
+            } />
+            
+            {/* Catch-all route for 404 errors */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
