@@ -72,7 +72,7 @@ const Profiles = () => {
     }
   }
 
-  const filterProfiles = () => {
+  function filterProfiles() {
     let filtered = profiles;
 
     if (searchTerm) {
@@ -98,7 +98,7 @@ const Profiles = () => {
     }
 
     setFilteredProfiles(filtered);
-  };
+  }
 
   const handleDelete = async (id: string) => {
     if (!user) {
