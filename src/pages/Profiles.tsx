@@ -55,7 +55,7 @@ const Profiles = () => {
     );
   }
 
-  const fetchProfiles = async () => {
+  async function fetchProfiles() {
     try {
       const { data, error } = await supabase.rpc('get_public_profiles');
 
@@ -70,7 +70,7 @@ const Profiles = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const filterProfiles = () => {
     let filtered = profiles;
