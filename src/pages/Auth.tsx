@@ -179,12 +179,9 @@ const Auth = () => {
           setError(error.message || 'Sign in failed. Please try again.');
         }
       } else {
-        console.log('Sign in successful, navigating to profiles');
-        setMessage('Welcome back! Redirecting to your dashboard...');
-        // Short delay to show success message before redirect
-        setTimeout(() => {
-          navigate('/profiles');
-        }, 1000);
+        console.log('Sign in successful');
+        setMessage('Welcome back! Redirecting...');
+        // The useEffect will handle navigation when user state updates
       }
     } catch (err: any) {
       console.error('Form submission error:', err);
