@@ -34,8 +34,25 @@ const Navbar = () => {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+    try {
+      console.log('Navbar: Starting sign out...');
+      await signOut();
+      console.log('Navbar: Sign out completed, navigating to home...');
+      navigate('/');
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account.",
+      });
+      // Close mobile menu if open
+      setIsMenuOpen(false);
+    } catch (error) {
+      console.error('Navbar: Sign out failed:', error);
+      toast({
+        title: "Sign out failed",
+        description: "There was an error signing you out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Filter profiles based on search query
