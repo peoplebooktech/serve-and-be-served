@@ -67,7 +67,7 @@ const Index = () => {
             
             <div className="lg:w-1/2 mt-16 lg:mt-0 flex flex-col items-center animate-fade-in" style={{ animationDelay: "0.2s" }}>
               <div className="mb-4 text-center">
-                <span className="text-lg font-bold"><span className="gradient-text">An IIT</span> <span className="text-peoplebook-purple">Incubated Enterprise</span></span>
+                <span className="text-lg font-bold gradient-text">An IIT Incubated Enterprise</span>
               </div>
               <div className="relative">
                 {/* Floating Elements */}
