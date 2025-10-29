@@ -157,9 +157,6 @@ const Navbar = () => {
 
           {/* Desktop menu */}
           <div className="hidden md:flex items-center space-x-6">
-            <span className="text-xs text-slate-500 font-medium border-l border-slate-300 pl-6">
-              An IIT Incubated Enterprise
-            </span>
             <Link to="/" className="text-slate-700 hover:text-peoplebook-blue font-medium">
               Home
             </Link>
