@@ -32,33 +32,16 @@ const ResetPassword = () => {
 
   const validateToken = async () => {
     try {
-      const { data, error } = await supabase
-        .from('password_reset_tokens')
-        .select('email, expires_at, used')
-        .eq('token', token)
-        .single();
-
-      if (error || !data) {
-        setError('Invalid or expired reset link');
+      // Validate token format first (basic check)
+      if (!token || token.length < 10) {
+        setError('Invalid reset link');
         setTokenValid(false);
         return;
       }
-
-      if (data.used) {
-        setError('This reset link has already been used');
-        setTokenValid(false);
-        return;
-      }
-
-      if (new Date() > new Date(data.expires_at)) {
-        setError('This reset link has expired');
-        setTokenValid(false);
-        return;
-      }
-
+      // Token will be fully validated server-side when password is reset
+      // This is just a basic format check
       setTokenValid(true);
     } catch (err) {
-      console.error('Token validation error:', err);
       setError('Unable to validate reset link');
       setTokenValid(false);
     }
@@ -81,44 +64,31 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
-      // Get the email associated with this token
-      const { data: tokenData } = await supabase
-        .from('password_reset_tokens')
-        .select('email')
-        .eq('token', token)
-        .single();
+      // Use secure edge function to reset password server-side
+      const { data, error: resetError } = await supabase.functions.invoke('reset-password-with-token', {
+        body: {
+          token: token,
+          password: password
+        }
+      });
 
-      if (!tokenData) {
-        setError('Invalid reset token');
-        setLoading(false);
-        return;
-      }
-
-      // Update the user's password using Supabase Auth Admin API
-      // This would typically be done via an edge function for security
-      const { error: updateError } = await supabase.auth.admin.updateUserById(
-        tokenData.email, 
-        { password }
-      );
-
-      if (updateError) {
+      if (resetError) {
         setError('Failed to update password. Please try again.');
         setLoading(false);
         return;
       }
 
-      // Mark token as used
-      await supabase
-        .from('password_reset_tokens')
-        .update({ used: true })
-        .eq('token', token);
+      if (data?.error) {
+        setError(data.error);
+        setLoading(false);
+        return;
+      }
 
       setSuccess(true);
       setTimeout(() => {
         navigate('/auth');
       }, 3000);
     } catch (err) {
-      console.error('Password reset error:', err);
       setError('An unexpected error occurred. Please try again.');
     }
 

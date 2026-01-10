@@ -183,14 +183,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
       
-      // If user is created and confirmed immediately, assign the role
-      if (data?.user && data?.session) {
-        console.log('User created and confirmed, assigning role...');
-        const roleResult = await assignUserRole(data.user.id, role);
-        if (roleResult.error) {
-          console.error('Failed to assign role:', roleResult.error);
-        }
-      }
+      // Role assignment is now handled by the handle_new_user() trigger
+      // which reads from user metadata during signup. No need for client-side role assignment.
       
       if (data?.user && !data?.session) {
         console.log('User created, confirmation email should be sent');
@@ -223,28 +217,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await fetchUserRoles(userId);
   };
 
+  // Role assignment is now handled by the database trigger (handle_new_user)
+  // and admin-only RPC functions (assign_user_role, remove_user_role).
+  // This function is kept for interface compatibility but logs a warning.
   const assignUserRole = async (userId: string, role: AppRole) => {
-    try {
-      const { error } = await supabase
-        .from('user_roles')
-        .insert({ user_id: userId, role: role });
-      
-      if (error) {
-        console.error('Error assigning role:', error);
-        return { error };
-      }
-      
-      // Refresh user roles after assignment
-      if (user && user.id === userId) {
-        const roles = await fetchUserRoles(userId);
-        setUser({ ...user, roles });
-      }
-      
-      return { error: null };
-    } catch (err: any) {
-      console.error('Exception assigning role:', err);
-      return { error: err };
-    }
+    console.warn('Direct role assignment from client is disabled. Roles are assigned via database trigger during signup.');
+    return { error: { message: 'Role assignment is handled by the server during signup' } };
   };
 
   const signIn = async (email: string, password: string) => {
