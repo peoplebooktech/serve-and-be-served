@@ -117,7 +117,7 @@ export type Database = {
         Returns: undefined
       }
       get_authenticated_profiles: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           bio: string
           company: string
@@ -149,7 +149,7 @@ export type Database = {
         }[]
       }
       get_public_profiles: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           bio: string
           company: string
