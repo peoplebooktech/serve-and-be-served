@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -35,11 +36,58 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Authenticate the request
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Missing or invalid authorization header' }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Verify the JWT and get user claims
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    
+    if (claimsError || !claimsData?.claims) {
+      console.error('Auth error:', claimsError);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Invalid token' }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const userId = claimsData.claims.sub;
+    console.log(`Authenticated notification request from user: ${userId}`);
+
     const { to, subject, type, data }: NotificationEmailRequest = await req.json();
 
-    if (!to || !subject || !type) {
+    // Validate inputs
+    if (!to || typeof to !== 'string' || !to.includes('@')) {
       return new Response(
-        JSON.stringify({ error: "Email, subject, and type are required" }),
+        JSON.stringify({ error: "Valid email address is required" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!subject || typeof subject !== 'string' || subject.length > 200) {
+      return new Response(
+        JSON.stringify({ error: "Subject is required (max 200 characters)" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const validTypes = ["connection_request", "new_message", "profile_view", "custom"];
+    if (!type || !validTypes.includes(type)) {
+      return new Response(
+        JSON.stringify({ error: "Valid notification type is required" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -100,7 +148,10 @@ const handler = async (req: Request): Promise<Response> => {
 };
 
 function generateConnectionRequestEmail(data: any): string {
-  const { recipientName = "there", senderName, actionUrl } = data;
+  const recipientName = sanitizeForHtml(data.recipientName || "there");
+  const senderName = sanitizeForHtml(data.senderName || "Someone");
+  const actionUrl = sanitizeUrl(data.actionUrl || 'https://peoplebook.ai/dashboard');
+  
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="text-align: center; margin-bottom: 40px;">
@@ -117,7 +168,7 @@ function generateConnectionRequestEmail(data: any): string {
       </div>
 
       <div style="text-align: center; margin: 30px 0;">
-        <a href="${actionUrl || 'https://peoplebook.ai/dashboard'}" 
+        <a href="${actionUrl}" 
            style="background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 500; display: inline-block;">
           View Request
         </a>
@@ -131,7 +182,11 @@ function generateConnectionRequestEmail(data: any): string {
 }
 
 function generateNewMessageEmail(data: any): string {
-  const { recipientName = "there", senderName, message, actionUrl } = data;
+  const recipientName = sanitizeForHtml(data.recipientName || "there");
+  const senderName = sanitizeForHtml(data.senderName || "Someone");
+  const message = data.message ? sanitizeForHtml(data.message.slice(0, 500)) : "";
+  const actionUrl = sanitizeUrl(data.actionUrl || 'https://peoplebook.ai/messages');
+  
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="text-align: center; margin-bottom: 40px;">
@@ -149,7 +204,7 @@ function generateNewMessageEmail(data: any): string {
       </div>
 
       <div style="text-align: center; margin: 30px 0;">
-        <a href="${actionUrl || 'https://peoplebook.ai/messages'}" 
+        <a href="${actionUrl}" 
            style="background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 500; display: inline-block;">
           View Message
         </a>
@@ -163,7 +218,10 @@ function generateNewMessageEmail(data: any): string {
 }
 
 function generateProfileViewEmail(data: any): string {
-  const { recipientName = "there", senderName, actionUrl } = data;
+  const recipientName = sanitizeForHtml(data.recipientName || "there");
+  const senderName = sanitizeForHtml(data.senderName || "Someone");
+  const actionUrl = sanitizeUrl(data.actionUrl || 'https://peoplebook.ai/dashboard');
+  
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="text-align: center; margin-bottom: 40px;">
@@ -180,7 +238,7 @@ function generateProfileViewEmail(data: any): string {
       </div>
 
       <div style="text-align: center; margin: 30px 0;">
-        <a href="${actionUrl || 'https://peoplebook.ai/dashboard'}" 
+        <a href="${actionUrl}" 
            style="background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 500; display: inline-block;">
           View Your Profile
         </a>
@@ -194,7 +252,10 @@ function generateProfileViewEmail(data: any): string {
 }
 
 function generateGenericEmail(data: any): string {
-  const { recipientName = "there", message = "", actionUrl } = data;
+  const recipientName = sanitizeForHtml(data.recipientName || "there");
+  const message = sanitizeForHtml(data.message || "");
+  const actionUrl = data.actionUrl ? sanitizeUrl(data.actionUrl) : null;
+  
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="text-align: center; margin-bottom: 40px;">
@@ -223,6 +284,29 @@ function generateGenericEmail(data: any): string {
       </div>
     </div>
   `;
+}
+
+// Sanitize text for HTML to prevent XSS
+function sanitizeForHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+// Sanitize URL to only allow safe protocols
+function sanitizeUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+      return url;
+    }
+    return 'https://peoplebook.ai/dashboard';
+  } catch {
+    return 'https://peoplebook.ai/dashboard';
+  }
 }
 
 serve(handler);

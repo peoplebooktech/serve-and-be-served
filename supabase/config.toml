@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.notification-email]
 verify_jwt = false
+
+[functions.reset-password-with-token]
+verify_jwt = false

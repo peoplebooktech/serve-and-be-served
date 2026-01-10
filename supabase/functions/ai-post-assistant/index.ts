@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,16 +14,78 @@ serve(async (req) => {
   }
 
   try {
+    // Authenticate the request
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Missing or invalid authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Verify the JWT and get user claims
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    
+    if (claimsError || !claimsData?.claims) {
+      console.error('Auth error:', claimsError);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Invalid token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const userId = claimsData.claims.sub;
+    console.log(`Authenticated request from user: ${userId}`);
+
     const { action, content, role, skills, vertical } = await req.json();
 
-    if (!action || !content) {
-      throw new Error('Action and content are required');
+    // Validate inputs
+    if (!action || typeof action !== 'string') {
+      return new Response(
+        JSON.stringify({ error: 'Action is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!content || typeof content !== 'string') {
+      return new Response(
+        JSON.stringify({ error: 'Content is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (content.length > 5000) {
+      return new Response(
+        JSON.stringify({ error: 'Content is too long (max 5000 characters)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const validActions = ['enhance_post', 'generate_hashtags', 'summarize_post'];
+    if (!validActions.includes(action)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid action. Use: enhance_post, generate_hashtags, or summarize_post' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
       throw new Error('OpenAI API key not configured');
     }
+
+    // Sanitize inputs
+    const sanitizedRole = (role || 'Professional').slice(0, 50);
+    const sanitizedSkills = Array.isArray(skills) ? skills.slice(0, 20).map(s => String(s).slice(0, 50)).join(', ') : 'General';
+    const sanitizedVertical = (vertical || 'General').slice(0, 50);
 
     let prompt = '';
     let systemMessage = '';
@@ -32,15 +95,15 @@ serve(async (req) => {
       prompt = `Transform these rough notes into a polished, engaging post for PeopleBook.ai:
 
 User Details:
-- Role: ${role}
-- Skills: ${skills?.join(', ') || 'General'}
-- Vertical: ${vertical || 'General'}
+- Role: ${sanitizedRole}
+- Skills: ${sanitizedSkills}
+- Vertical: ${sanitizedVertical}
 
 Raw Content: ${content}
 
 Requirements:
 1. Professional yet conversational tone
-2. Relevant to ${vertical || 'professional networking'} vertical
+2. Relevant to ${sanitizedVertical} vertical
 3. Engaging and actionable
 4. Include relevant keywords naturally
 5. 200-300 words maximum
@@ -53,12 +116,12 @@ Return only the enhanced post content.`;
       prompt = `Generate 3-5 relevant, trending hashtags for this post content:
 
 Content: ${content}
-Vertical: ${vertical || 'General'}
-User Role: ${role}
+Vertical: ${sanitizedVertical}
+User Role: ${sanitizedRole}
 
 Requirements:
 1. Mix of popular and niche hashtags
-2. Relevant to ${vertical || 'professional networking'}
+2. Relevant to ${sanitizedVertical}
 3. Professional and appropriate
 4. Include both broad and specific tags
 
@@ -77,9 +140,6 @@ Requirements:
 4. Start with "TL;DR:"
 
 Return only the summary.`;
-
-    } else {
-      throw new Error('Invalid action. Use: enhance_post, generate_hashtags, or summarize_post');
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -101,13 +161,14 @@ Return only the summary.`;
 
     if (!response.ok) {
       const error = await response.json();
+      console.error('OpenAI API error:', error);
       throw new Error(error.error?.message || 'Failed to process content');
     }
 
     const data = await response.json();
     const result = data.choices[0].message.content.trim();
 
-    console.log(`AI post assistant: ${action} completed successfully`);
+    console.log(`AI post assistant: ${action} completed successfully for user: ${userId}`);
     return new Response(JSON.stringify({ result }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

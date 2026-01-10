@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,10 +14,52 @@ serve(async (req) => {
   }
 
   try {
+    // Authenticate the request
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Missing or invalid authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Verify the JWT and get user claims
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    
+    if (claimsError || !claimsData?.claims) {
+      console.error('Auth error:', claimsError);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Invalid token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const userId = claimsData.claims.sub;
+    console.log(`Authenticated request from user: ${userId}`);
+
     const { message, context, userRole, conversationHistory } = await req.json();
 
-    if (!message) {
-      throw new Error('Message is required for smart reply generation');
+    // Validate inputs
+    if (!message || typeof message !== 'string') {
+      return new Response(
+        JSON.stringify({ error: 'Message is required for smart reply generation' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (message.length > 2000) {
+      return new Response(
+        JSON.stringify({ error: 'Message is too long (max 2000 characters)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
@@ -30,12 +73,19 @@ serve(async (req) => {
       'Ad-Hoc': 'as a facilitator connecting people and building relationships'
     };
 
+    // Sanitize inputs
+    const sanitizedUserRole = userRole && roleGuidance[userRole as keyof typeof roleGuidance] ? userRole : 'Consumer';
+    const sanitizedContext = (context || 'General professional conversation').slice(0, 500);
+    const sanitizedHistory = Array.isArray(conversationHistory) 
+      ? conversationHistory.slice(-2).map(h => String(h).slice(0, 500)).join('\n') 
+      : 'No prior context';
+
     const prompt = `Generate 3 smart reply suggestions for this message in a professional networking context:
 
 Incoming Message: "${message}"
-Your Role: ${userRole} - respond ${roleGuidance[userRole as keyof typeof roleGuidance]}
-Context: ${context || 'General professional conversation'}
-Recent Conversation: ${conversationHistory?.slice(-2).join('\n') || 'No prior context'}
+Your Role: ${sanitizedUserRole} - respond ${roleGuidance[sanitizedUserRole as keyof typeof roleGuidance]}
+Context: ${sanitizedContext}
+Recent Conversation: ${sanitizedHistory}
 
 Requirements:
 1. Professional and contextually appropriate
@@ -72,6 +122,7 @@ Return only the JSON array, no additional text.`;
 
     if (!response.ok) {
       const error = await response.json();
+      console.error('OpenAI API error:', error);
       throw new Error(error.error?.message || 'Failed to generate smart replies');
     }
 
@@ -90,7 +141,7 @@ Return only the JSON array, no additional text.`;
       ];
     }
 
-    console.log('Smart replies generated successfully');
+    console.log(`Smart replies generated successfully for user: ${userId}`);
     return new Response(JSON.stringify({ suggestions }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
