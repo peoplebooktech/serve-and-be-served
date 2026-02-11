@@ -10,15 +10,15 @@ const supabase = createClient(
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface ResetEmailRequest {
   email: string;
+  origin?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -31,11 +31,20 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email }: ResetEmailRequest = await req.json();
+    const { email, origin }: ResetEmailRequest = await req.json();
 
-    if (!email) {
+    if (!email || typeof email !== "string") {
       return new Response(
         JSON.stringify({ error: "Email is required" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email) || email.length > 255) {
+      return new Response(
+        JSON.stringify({ error: "Invalid email address" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -44,35 +53,61 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Generate a secure reset token
     const resetToken = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
-    // Check if user exists and get their profile info
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('name, user_id')
-      .eq('user_id', 
-        supabase.auth.admin.getUserByEmail ? 
-        await supabase.auth.admin.getUserByEmail(email).then(res => res.data?.user?.id) : 
-        null
-      )
-      .single();
+    // Look up user by email using the admin API
+    const { data: usersData, error: userError } = await supabase.auth.admin.listUsers({
+      page: 1,
+      perPage: 1,
+    });
 
-    // Store reset token in database (create table if needed)
+    // Find user by email from auth
+    let userName = email.split("@")[0];
+    
+    // Use getUserById after finding via listUsers, or just look up profile directly
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("name")
+      .limit(1);
+
+    // Try to find the user's name from profiles via a join approach
+    // Since we can't directly query by email in profiles, look up user first
+    const { data: authUser } = await supabase.auth.admin.listUsers();
+    const matchedUser = authUser?.users?.find(u => u.email === email);
+    
+    if (matchedUser) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("user_id", matchedUser.id)
+        .single();
+      
+      if (profile?.name) {
+        userName = profile.name;
+      }
+    }
+
+    // Store reset token in database
     const { error: insertError } = await supabase
-      .from('password_reset_tokens')
+      .from("password_reset_tokens")
       .insert({
-        email: email,
+        email,
         token: resetToken,
         expires_at: expiresAt.toISOString(),
-        used: false
+        used: false,
       });
 
     if (insertError) {
-      console.log("Reset token table might not exist, will still send email");
+      console.error("Failed to store reset token:", insertError);
+      return new Response(
+        JSON.stringify({ error: "Failed to process reset request" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
-    const resetUrl = `https://peoplebook.ai/reset-password/${resetToken}`;
-    const userName = profile?.name || email.split('@')[0];
+    // Use the origin from the request, or fall back to a default
+    const baseUrl = origin || "https://serve-and-be-served.lovable.app";
+    const resetUrl = `${baseUrl}/reset-password/${resetToken}`;
 
     const emailResponse = await resend.emails.send({
       from: "PeopleBook.ai Security <security@peoplebook.ai>",
@@ -139,11 +174,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Password reset email sent successfully:", emailResponse);
 
+    // Always return success to prevent email enumeration
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Password reset email sent successfully",
-        messageId: emailResponse.data?.id 
+        message: "If an account exists with that email, a password reset link has been sent.",
       }),
       {
         status: 200,
@@ -153,9 +188,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in send-reset-email function:", error);
     return new Response(
-      JSON.stringify({ 
-        error: error.message || "Failed to send password reset email" 
-      }),
+      JSON.stringify({ error: "Failed to send password reset email" }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
