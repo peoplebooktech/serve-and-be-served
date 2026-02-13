@@ -75,16 +75,8 @@ const Auth = () => {
     }
   ];
 
-  // Clear all auth state on component mount for fresh start
+  // Reset form state on mount (do NOT clear auth tokens)
   useEffect(() => {
-    // Clear localStorage on mount for fresh start
-    localStorage.removeItem('supabase.auth.token');
-    
-    // Reset all form state
-    setEmail('');
-    setPassword('');
-    setName('');
-    setSelectedRole('consumer');
     setLoading(false);
     setError('');
     setMessage('');

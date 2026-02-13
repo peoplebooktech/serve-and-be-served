@@ -279,25 +279,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Starting sign out process...');
       
-      // Clear all local state first
-      setUser(null);
-      setSession(null);
-      
-      // Clear localStorage
-      localStorage.removeItem('supabase.auth.token');
-      localStorage.clear();
-      
-      // Sign out from Supabase
+      // Sign out from Supabase first (this clears its own storage)
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Sign out error:', error);
-        throw error;
       }
       
-      console.log('Sign out successful - forcing reload for fresh state');
+      // Clear local state after sign out
+      setUser(null);
+      setSession(null);
       
-      // Force reload to ensure completely clean state
-      window.location.reload();
+      console.log('Sign out successful');
+      
+      // Navigate to auth page
+      window.location.href = '/auth';
     } catch (err) {
       console.error('Sign out exception:', err);
       throw err;
