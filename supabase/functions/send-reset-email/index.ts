@@ -49,6 +49,26 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Rate limiting: check if a reset token was created for this email in the last 2 minutes
+    const { data: recentTokens, error: rateLimitError } = await supabase
+      .from("password_reset_tokens")
+      .select("created_at")
+      .eq("email", email)
+      .gte("created_at", new Date(Date.now() - 2 * 60 * 1000).toISOString())
+      .limit(1);
+
+    if (!rateLimitError && recentTokens && recentTokens.length > 0) {
+      // Still return success to prevent email enumeration, but don't send another email
+      console.log(`Rate limited: reset email already sent to ${email} recently`);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "If an account exists with that email, a password reset link has been sent.",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     console.log(`Processing password reset for ${email}`);
 
     // Generate a secure reset token
