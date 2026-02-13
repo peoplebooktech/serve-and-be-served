@@ -55,16 +55,28 @@ const Profiles = () => {
     );
   }
 
-  async function fetchProfiles() {
+  async function fetchProfiles(retryCount = 0) {
     try {
       const { data, error } = await supabase.rpc('get_public_profiles');
 
       if (error) throw error;
       setProfiles(data || []);
-    } catch (error) {
+    } catch (error: any) {
+      const isNetworkError = error?.message?.includes('Failed to fetch') || 
+                             error?.message?.includes('TypeError');
+      
+      // Retry once on network errors
+      if (isNetworkError && retryCount < 1) {
+        if (import.meta.env.DEV) console.log('Network error, retrying...');
+        setTimeout(() => fetchProfiles(retryCount + 1), 2000);
+        return;
+      }
+
       toast({
-        title: "Error",
-        description: "Failed to fetch profiles",
+        title: isNetworkError ? "Connection Error" : "Error",
+        description: isNetworkError 
+          ? "Unable to connect to the server. Please check your internet connection and try again." 
+          : "Failed to load profiles. Please try again later.",
         variant: "destructive",
       });
     } finally {
