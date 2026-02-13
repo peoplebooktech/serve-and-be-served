@@ -54,86 +54,75 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Clear any existing auth state first
-    setUser(null);
-    setSession(null);
-    setLoading(true);
+    let isMounted = true;
 
-    // Clear localStorage auth state
-    localStorage.removeItem('supabase.auth.token');
-    
-    // Set up auth state listener
+    // Listener for ONGOING auth changes (does NOT control loading)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.email);
-        
+      (event, currentSession) => {
+        if (!isMounted) return;
+        console.log('Auth state change:', event, currentSession?.user?.email);
+
         if (event === 'SIGNED_OUT') {
           setUser(null);
           setSession(null);
-          setLoading(false);
           return;
         }
-        
-        setSession(session);
-        
-        if (session?.user) {
-          try {
-            const roles = await fetchUserRoles(session.user.id);
-            setUser({ ...session.user, roles });
-          } catch (error) {
-            console.error('Error fetching user roles:', error);
-            setUser(session.user);
-          }
+
+        setSession(currentSession);
+
+        if (currentSession?.user) {
+          // Use setTimeout to avoid deadlock from awaiting inside callback
+          setTimeout(async () => {
+            if (!isMounted) return;
+            try {
+              const roles = await fetchUserRoles(currentSession.user.id);
+              if (isMounted) setUser({ ...currentSession.user, roles });
+            } catch {
+              if (isMounted) setUser(currentSession.user);
+            }
+          }, 0);
         } else {
           setUser(null);
         }
-        setLoading(false);
       }
     );
 
-    // Check for initial session after a small delay to ensure clean state
-    const checkInitialSession = async () => {
+    // INITIAL load (controls loading state)
+    const initializeAuth = async () => {
       try {
-        // Clear any potential cached session first
-        await supabase.auth.refreshSession();
-        
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+
         console.log('Initial session check:', initialSession?.user?.email);
-        
-        if (error) {
-          console.error('Error getting initial session:', error);
-          setUser(null);
-          setSession(null);
-          setLoading(false);
-          return;
-        }
+        setSession(initialSession);
 
         if (initialSession?.user) {
           try {
             const roles = await fetchUserRoles(initialSession.user.id);
-            setUser({ ...initialSession.user, roles });
-            setSession(initialSession);
-          } catch (error) {
-            console.error('Error fetching initial user roles:', error);
-            setUser(initialSession.user);
-            setSession(initialSession);
+            if (isMounted) setUser({ ...initialSession.user, roles });
+          } catch {
+            if (isMounted) setUser(initialSession.user);
           }
         } else {
           setUser(null);
-          setSession(null);
         }
       } catch (error) {
         console.error('Error in initial session check:', error);
-        setUser(null);
-        setSession(null);
+        if (isMounted) {
+          setUser(null);
+          setSession(null);
+        }
+      } finally {
+        if (isMounted) setLoading(false);
       }
-      setLoading(false);
     };
 
-    // Use timeout to ensure clean initialization
-    setTimeout(checkInitialSession, 100);
+    initializeAuth();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, name: string, role: AppRole) => {
