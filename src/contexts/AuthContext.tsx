@@ -22,12 +22,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Dev-only logger to prevent information leakage in production
+const devLog = (...args: any[]) => {
+  if (import.meta.env.DEV) {
+    console.log(...args);
+  }
+};
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    // More descriptive error message and check if we're in development
-    console.error('useAuth called outside of AuthProvider. Make sure the component is wrapped in AuthProvider.');
-    console.trace('Stack trace for useAuth error:');
+    if (import.meta.env.DEV) {
+      console.error('useAuth called outside of AuthProvider.');
+      console.trace('Stack trace for useAuth error:');
+    }
     throw new Error('useAuth must be used within an AuthProvider. Check that your component is properly wrapped.');
   }
   return context;
@@ -43,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data, error } = await supabase.rpc('get_user_roles', { _user_id: userId });
       if (error) {
-        console.error('Error fetching user roles:', error);
+        console.error('Error fetching user roles:', error.message);
         return [];
       }
       return data?.map((item: any) => item.role) || [];
@@ -56,11 +64,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let isMounted = true;
 
-    // Listener for ONGOING auth changes (does NOT control loading)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         if (!isMounted) return;
-        console.log('Auth state change:', event, currentSession?.user?.email);
+        devLog('Auth state change:', event);
 
         if (event === 'SIGNED_OUT') {
           setUser(null);
@@ -71,7 +78,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(currentSession);
 
         if (currentSession?.user) {
-          // Use setTimeout to avoid deadlock from awaiting inside callback
           setTimeout(async () => {
             if (!isMounted) return;
             try {
@@ -87,13 +93,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // INITIAL load (controls loading state)
     const initializeAuth = async () => {
       try {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
         if (!isMounted) return;
 
-        console.log('Initial session check:', initialSession?.user?.email);
+        devLog('Initial session check:', initialSession ? 'session exists' : 'no session');
         setSession(initialSession);
 
         if (initialSession?.user) {
@@ -107,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(null);
         }
       } catch (error) {
-        console.error('Error in initial session check:', error);
+        console.error('Error in initial session check:', error instanceof Error ? error.message : 'Unknown error');
         if (isMounted) {
           setUser(null);
           setSession(null);
@@ -127,13 +132,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, name: string, role: AppRole) => {
     try {
-      // Use the main site URL for better email confirmation flow
       const redirectUrl = `${window.location.origin}/auth/confirm`;
       
-      console.log('Starting signup process...');
-      console.log('Sign up redirect URL:', redirectUrl);
-      console.log('Email:', email);
-      console.log('Role:', role);
+      devLog('Starting signup process...');
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -147,12 +148,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       });
       
-      console.log('Signup response:', { data, error });
-      
       if (error) {
-        console.error('Signup error:', error);
+        console.error('Signup error:', error.message);
         
-        // Handle specific signup errors
         if (error.message === 'User already registered') {
           return { 
             error: { 
@@ -172,15 +170,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
       
-      // Role assignment is now handled by the handle_new_user() trigger
-      // which reads from user metadata during signup. No need for client-side role assignment.
-      
       if (data?.user && !data?.session) {
-        console.log('User created, confirmation email should be sent');
+        devLog('User created, confirmation email should be sent');
         
-        // Send welcome email after successful signup
         try {
-          console.log('Sending welcome email...');
           await supabase.functions.invoke('send-welcome-email', {
             body: {
               email: email,
@@ -188,16 +181,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               role: role
             }
           });
-          console.log('Welcome email sent successfully');
+          devLog('Welcome email sent successfully');
         } catch (emailError) {
-          console.error('Failed to send welcome email:', emailError);
-          // Don't fail the signup if email fails
+          console.error('Failed to send welcome email');
         }
       }
       
       return { error: null };
     } catch (err: any) {
-      console.error('Signup exception:', err);
+      console.error('Signup exception:', err instanceof Error ? err.message : 'Unknown error');
       return { error: err };
     }
   };
@@ -206,11 +198,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await fetchUserRoles(userId);
   };
 
-  // Role assignment is now handled by the database trigger (handle_new_user)
-  // and admin-only RPC functions (assign_user_role, remove_user_role).
-  // This function is kept for interface compatibility but logs a warning.
   const assignUserRole = async (userId: string, role: AppRole) => {
-    console.warn('Direct role assignment from client is disabled. Roles are assigned via database trigger during signup.');
+    devLog('Direct role assignment from client is disabled. Roles are assigned via database trigger during signup.');
     return { error: { message: 'Role assignment is handled by the server during signup' } };
   };
 
@@ -221,12 +210,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
       });
       
-      console.log('Sign in response:', { data, error });
+      devLog('Sign in completed');
       
       if (error) {
-        console.error('Sign in error details:', error);
+        console.error('Sign in error:', error.message);
         
-        // Handle different types of authentication errors
         if (error.message === 'Invalid login credentials') {
           return { 
             error: { 
@@ -252,7 +240,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       return { error: null };
     } catch (err: any) {
-      console.error('Sign in exception:', err);
+      console.error('Sign in exception:', err instanceof Error ? err.message : 'Unknown error');
       return { error: err };
     }
   };
@@ -267,34 +255,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       });
       
-      console.log('Resend confirmation response:', { error });
+      devLog('Resend confirmation completed');
       return { error };
     } catch (err: any) {
-      console.error('Resend confirmation exception:', err);
+      console.error('Resend confirmation exception:', err instanceof Error ? err.message : 'Unknown error');
       return { error: err };
     }
   };
 
   const signOut = async () => {
     try {
-      console.log('Starting sign out process...');
+      devLog('Starting sign out process...');
       
-      // Sign out from Supabase first (this clears its own storage)
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error('Sign out error:', error);
+        console.error('Sign out error:', error.message);
       }
       
-      // Clear local state after sign out
       setUser(null);
       setSession(null);
       
-      console.log('Sign out successful');
+      devLog('Sign out successful');
       
-      // Navigate to auth page
       window.location.href = '/auth';
     } catch (err) {
-      console.error('Sign out exception:', err);
+      console.error('Sign out exception:', err instanceof Error ? err.message : 'Unknown error');
       throw err;
     }
   };
