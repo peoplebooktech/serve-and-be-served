@@ -7,6 +7,23 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+// In-memory rate limiting
+const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(userId);
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    rateLimitMap.set(userId, { count: 1, windowStart: now });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return false;
+  entry.count++;
+  return true;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -32,6 +49,13 @@ serve(async (req) => {
     if (claimsError || !claimsData?.claims) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const sub = claimsData.claims.sub;
+    if (!checkRateLimit(sub)) {
+      return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again in a minute.' }), {
+        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 

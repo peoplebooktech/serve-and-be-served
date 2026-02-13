@@ -35,9 +35,7 @@ const Navbar = () => {
 
   const handleSignOut = async () => {
     try {
-      console.log('Navbar: Starting sign out...');
       await signOut();
-      console.log('Navbar: Sign out completed, navigating to home...');
       navigate('/');
       toast({
         title: "Signed out successfully",
@@ -46,7 +44,7 @@ const Navbar = () => {
       // Close mobile menu if open
       setIsMenuOpen(false);
     } catch (error) {
-      console.error('Navbar: Sign out failed:', error);
+      console.error('Sign out failed');
       toast({
         title: "Sign out failed",
         description: "There was an error signing you out. Please try again.",

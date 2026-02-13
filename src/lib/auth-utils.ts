@@ -5,33 +5,20 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const clearAuthState = async () => {
   try {
-    console.log('Clearing all authentication state...');
-    
     // Sign out from Supabase first
     await supabase.auth.signOut();
     
-    // Clear all localStorage items
-    localStorage.clear();
-    
-    // Clear sessionStorage as well
-    sessionStorage.clear();
-    
-    // Clear any Supabase specific storage
-    localStorage.removeItem('supabase.auth.token');
-    
-    // Clear any remaining auth-related items
+    // Clear Supabase specific storage keys only
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const key = localStorage.key(i);
-      if (key && (key.startsWith('sb-') || key.includes('auth'))) {
+      if (key && key.startsWith('sb-')) {
         localStorage.removeItem(key);
       }
     }
     
-    console.log('Authentication state cleared successfully');
-    
     return { success: true };
   } catch (error) {
-    console.error('Error clearing auth state:', error);
+    console.error('Error clearing auth state');
     return { success: false, error };
   }
 };
@@ -41,7 +28,5 @@ export const clearAuthState = async () => {
  */
 export const forceAuthReset = async () => {
   await clearAuthState();
-  
-  // Force reload for complete fresh start
   window.location.href = '/auth';
 };

@@ -134,23 +134,24 @@ const Auth = () => {
     setValidationErrors([]);
     setAttemptCount(prev => prev + 1);
 
-    console.log('Form submitted for signup with email:', email);
-    console.log('Current URL origin:', window.location.origin);
+    if (import.meta.env.DEV) {
+      console.log('Form submitted for signup');
+    }
 
     try {
       const { error } = await signUp(email, password, name, selectedRole);
 
-      console.log('Signup completed with error:', error);
+      if (import.meta.env.DEV) console.log('Signup completed');
 
       if (error) {
-        console.error('Signup form error:', error);
+        if (import.meta.env.DEV) console.error('Signup form error:', error?.message);
         setError(error.message || 'An error occurred during signup');
         
         if (error.message?.includes('already registered') || error.message?.includes('already been registered')) {
           setShowResend(true);
         }
       } else {
-        console.log('Signup successful, showing success message');
+        if (import.meta.env.DEV) console.log('Signup successful');
         setMessage('🎉 Account created successfully! Please check your email (including spam folder) for the confirmation link.');
         setShowResend(true);
         setCurrentStep(1);
@@ -160,7 +161,7 @@ const Auth = () => {
         setName('');
       }
     } catch (err: any) {
-      console.error('Form submission error:', err);
+      if (import.meta.env.DEV) console.error('Form submission error:', err?.message);
       setError('An unexpected error occurred. Please try again.');
     }
     
@@ -217,15 +218,15 @@ const Auth = () => {
     setShowResend(false);
     setAttemptCount(prev => prev + 1);
 
-    console.log('Attempting sign in with email:', email);
+    if (import.meta.env.DEV) console.log('Attempting sign in');
 
     try {
       const { error } = await signIn(email, password);
 
-      console.log('Sign in completed with error:', error);
+      if (import.meta.env.DEV) console.log('Sign in completed');
 
       if (error) {
-        console.error('Signin form error:', error);
+        if (import.meta.env.DEV) console.error('Signin form error:', error?.message);
         
         // Provide user-friendly error messages
         if (error.message?.includes('Invalid login credentials')) {
@@ -239,13 +240,13 @@ const Auth = () => {
           setError(error.message || 'Sign in failed. Please try again.');
         }
       } else {
-        console.log('Sign in successful');
+        if (import.meta.env.DEV) console.log('Sign in successful');
         setMessage('Welcome back! 🎉');
         // Clear sensitive form data
         setPassword('');
       }
     } catch (err: any) {
-      console.error('Form submission error:', err);
+      if (import.meta.env.DEV) console.error('Form submission error:', err?.message);
       setError('An unexpected error occurred. Please try again.');
     }
     
