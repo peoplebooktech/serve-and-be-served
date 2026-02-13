@@ -1,19 +1,41 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { type, prompt, name, title, company, content, category } = await req.json();
+    // Auth check
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { type, prompt } = await req.json();
 
     if (!type || !prompt) {
       throw new Error('Type and prompt are required');
@@ -25,16 +47,13 @@ serve(async (req) => {
     }
 
     let imagePrompt = '';
-
     if (type === 'profile_picture') {
-      imagePrompt = `Professional headshot portrait of a person. ${prompt}. Clean background, professional lighting, corporate style, high quality, professional photography style. The person should look approachable and confident.`;
+      imagePrompt = `Professional headshot portrait of a person. ${prompt}. Clean background, professional lighting, corporate style, high quality, professional photography style.`;
     } else if (type === 'post_image') {
-      imagePrompt = `Create a visually appealing image for a social media post about: ${prompt}. Modern, clean design, professional look, engaging visual that complements the content. No text overlays needed.`;
+      imagePrompt = `Create a visually appealing image for a social media post about: ${prompt}. Modern, clean design, professional look.`;
     } else {
       imagePrompt = prompt;
     }
-
-    console.log('Generating image with prompt:', imagePrompt);
 
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
@@ -54,14 +73,12 @@ serve(async (req) => {
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('OpenAI API error:', error);
       throw new Error(error.error?.message || 'Failed to generate image');
     }
 
     const data = await response.json();
     const imageData = data.data[0].b64_json;
 
-    console.log('Image generated successfully');
     return new Response(JSON.stringify({ 
       imageUrl: `data:image/png;base64,${imageData}`,
       success: true 
@@ -71,10 +88,7 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in ai-image-generator:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message,
-      success: false 
-    }), {
+    return new Response(JSON.stringify({ error: error.message, success: false }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

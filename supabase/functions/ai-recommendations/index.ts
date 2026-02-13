@@ -4,35 +4,51 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { userId, userSkills, userRole, userBio } = await req.json();
-
-    if (!userId) {
-      throw new Error('User ID is required');
+    // Auth check
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const userId = claimsData.claims.sub;
+    const { userSkills, userRole, userBio } = await req.json();
+
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
     if (!OPENAI_API_KEY) {
       throw new Error('OpenAI API key not configured');
     }
 
-    // Create Supabase client
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    const adminClient = createClient(supabaseUrl, SUPABASE_SERVICE_KEY);
 
     // Fetch all other profiles except current user
-    const { data: profiles, error } = await supabase
+    const { data: profiles, error } = await adminClient
       .from('profiles')
       .select('id, name, title, company, bio, skills, user_id')
       .neq('user_id', userId)
@@ -94,7 +110,6 @@ serve(async (req) => {
         const profileEmbeddingData = await profileEmbeddingResponse.json();
         const profileEmbedding = profileEmbeddingData.data[0].embedding;
 
-        // Calculate cosine similarity
         const dotProduct = userEmbedding.reduce((sum: number, a: number, idx: number) => sum + a * profileEmbedding[idx], 0);
         const normA = Math.sqrt(userEmbedding.reduce((sum: number, a: number) => sum + a * a, 0));
         const normB = Math.sqrt(profileEmbedding.reduce((sum: number, b: number) => sum + b * b, 0));
@@ -104,7 +119,6 @@ serve(async (req) => {
       })
     );
 
-    // Sort by score and get top 5
     const recommendations = profileScores
       .sort((a, b) => b.score - a.score)
       .slice(0, 5)
