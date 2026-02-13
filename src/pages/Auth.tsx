@@ -441,10 +441,13 @@ const Auth = () => {
                     
                     <div className="text-center mt-4">
                       <Button
+                        type="button"
                         variant="link"
                         onClick={() => {
                           setShowForgotPassword(true);
                           setForgotPasswordEmail(email);
+                          setError('');
+                          setValidationErrors([]);
                         }}
                         className="text-sm text-peoplebook-blue hover:text-peoplebook-purple transition-colors"
                       >
