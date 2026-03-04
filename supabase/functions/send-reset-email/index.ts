@@ -130,7 +130,7 @@ const handler = async (req: Request): Promise<Response> => {
     const resetUrl = `${baseUrl}/reset-password/${resetToken}`;
 
     const emailResponse = await resend.emails.send({
-      from: "PeopleBook.ai Security <security@peoplebook.ai>",
+      from: "PeopleBook.ai <onboarding@resend.dev>",
       to: [email],
       subject: "Reset your PeopleBook.ai password",
       html: `
