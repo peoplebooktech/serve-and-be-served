@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +11,6 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 const ResetPassword = () => {
-  const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -19,33 +18,37 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [tokenValid, setTokenValid] = useState<boolean | null>(null);
+  const [recoveryReady, setRecoveryReady] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    if (token) {
-      validateToken();
-    } else {
-      setError('Invalid reset link');
-      setTokenValid(false);
-    }
-  }, [token]);
-
-  const validateToken = async () => {
-    try {
-      // Validate token format first (basic check)
-      if (!token || token.length < 10) {
-        setError('Invalid reset link');
-        setTokenValid(false);
-        return;
+    // Listen for the PASSWORD_RECOVERY event from Supabase
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setRecoveryReady(true);
+        setChecking(false);
       }
-      // Token will be fully validated server-side when password is reset
-      // This is just a basic format check
-      setTokenValid(true);
-    } catch (err) {
-      setError('Unable to validate reset link');
-      setTokenValid(false);
-    }
-  };
+    });
+
+    // Also check if we already have a session (user clicked the link and session was established)
+    // The hash fragment is processed by Supabase automatically
+    const timeout = setTimeout(() => {
+      // If after 3 seconds we haven't received the event, check current session
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          setRecoveryReady(true);
+        } else {
+          setError('Invalid or expired reset link. Please request a new password reset.');
+        }
+        setChecking(false);
+      });
+    }, 3000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
+  }, []);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,27 +67,17 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
-      // Use secure edge function to reset password server-side
-      const { data, error: resetError } = await supabase.functions.invoke('reset-password-with-token', {
-        body: {
-          token: token,
-          password: password
-        }
-      });
+      const { error: updateError } = await supabase.auth.updateUser({ password });
 
-      if (resetError) {
-        setError('Failed to update password. Please try again.');
-        setLoading(false);
-        return;
-      }
-
-      if (data?.error) {
-        setError(data.error);
+      if (updateError) {
+        setError(updateError.message || 'Failed to update password. Please try again.');
         setLoading(false);
         return;
       }
 
       setSuccess(true);
+      // Sign out so user logs in fresh with new password
+      await supabase.auth.signOut();
       setTimeout(() => {
         navigate('/auth');
       }, 3000);
@@ -95,7 +88,7 @@ const ResetPassword = () => {
     setLoading(false);
   };
 
-  if (tokenValid === null) {
+  if (checking) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -107,7 +100,7 @@ const ResetPassword = () => {
     );
   }
 
-  if (tokenValid === false) {
+  if (!recoveryReady && !success) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -119,7 +112,7 @@ const ResetPassword = () => {
                   <AlertCircle className="w-6 h-6 text-red-600" />
                 </div>
                 <CardTitle className="text-2xl text-red-600">Invalid Reset Link</CardTitle>
-                <CardDescription>{error}</CardDescription>
+                <CardDescription>{error || 'This reset link is invalid or has expired.'}</CardDescription>
               </CardHeader>
               <CardContent className="text-center">
                 <Button 
