@@ -4,7 +4,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Filter, BarChart3, ListFilter, Sparkles, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { PlusCircle, Filter, BarChart3, ListFilter, Sparkles, Users, MapPin, Briefcase, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CollaborationCard from "@/components/CollaborationCard";
@@ -80,7 +82,7 @@ const Dashboard = () => {
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { matches: opportunityMatches, fetchMatches } = useOpportunityMatching();
+  const { matches: opportunityMatches, loading: matchesLoading, fetchMatches } = useOpportunityMatching();
   const { getMyApplications } = useApplications();
 
   const fetchAIRecommendations = async () => {
@@ -192,11 +194,13 @@ const Dashboard = () => {
                 
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-xl">AI Matches Today</CardTitle>
-                    <CardDescription>New AI-powered recommendations</CardDescription>
+                    <CardTitle className="text-xl">AI Matches</CardTitle>
+                    <CardDescription>Opportunities matched to your profile</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold text-peoplebook-orange">5</div>
+                    <div className="text-3xl font-bold text-peoplebook-orange">
+                      {matchesLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : opportunityMatches.length}
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -287,6 +291,80 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
+              {/* AI Opportunity Matches Section */}
+              <Card>
+                <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-peoplebook-orange" />
+                      Recommended Opportunities
+                    </CardTitle>
+                    <CardDescription>AI-matched based on your skills, location & preferences</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => fetchMatches()} disabled={matchesLoading}>
+                    {matchesLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                    Refresh
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {matchesLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                      <span className="ml-3 text-muted-foreground">Finding your best matches...</span>
+                    </div>
+                  ) : opportunityMatches.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <div className="rounded-full bg-muted p-6">
+                        <Briefcase className="h-12 w-12 text-muted-foreground" />
+                      </div>
+                      <h3 className="mt-4 text-lg font-medium">No matches yet</h3>
+                      <p className="mt-2 text-muted-foreground text-center max-w-md">
+                        Complete your profile with skills, district, and job preferences to get AI-powered opportunity matches.
+                      </p>
+                      <Link to="/profiles/add">
+                        <Button className="mt-4" variant="outline">Complete Profile</Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {opportunityMatches.map((match) => (
+                        <div
+                          key={match.opportunity_id}
+                          className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                        >
+                          <div className="flex-shrink-0 flex flex-col items-center">
+                            <div className="relative h-14 w-14">
+                              <svg className="h-14 w-14 -rotate-90" viewBox="0 0 36 36">
+                                <circle cx="18" cy="18" r="15.5" fill="none" className="stroke-muted" strokeWidth="3" />
+                                <circle
+                                  cx="18" cy="18" r="15.5" fill="none"
+                                  className="stroke-peoplebook-purple"
+                                  strokeWidth="3"
+                                  strokeDasharray={`${match.score} ${100 - match.score}`}
+                                  strokeLinecap="round"
+                                />
+                              </svg>
+                              <span className="absolute inset-0 flex items-center justify-center text-sm font-bold">
+                                {match.score}%
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold truncate">{match.title}</h4>
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {match.reasons.map((reason, i) => (
+                                <Badge key={i} variant="secondary" className="text-xs font-normal">
+                                  {reason}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="active">
