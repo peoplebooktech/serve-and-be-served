@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      applications: {
+        Row: {
+          applicant_id: string
+          cover_note: string | null
+          created_at: string
+          id: string
+          match_reason: string | null
+          match_score: number | null
+          opportunity_id: string
+          reviewed_at: string | null
+          status: string
+          updated_at: string
+          voice_note_url: string | null
+        }
+        Insert: {
+          applicant_id: string
+          cover_note?: string | null
+          created_at?: string
+          id?: string
+          match_reason?: string | null
+          match_score?: number | null
+          opportunity_id: string
+          reviewed_at?: string | null
+          status?: string
+          updated_at?: string
+          voice_note_url?: string | null
+        }
+        Update: {
+          applicant_id?: string
+          cover_note?: string | null
+          created_at?: string
+          id?: string
+          match_reason?: string | null
+          match_score?: number | null
+          opportunity_id?: string
+          reviewed_at?: string | null
+          status?: string
+          updated_at?: string
+          voice_note_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       badges: {
         Row: {
           category: string
@@ -97,6 +147,82 @@ export type Database = {
             columns: ["squad_id"]
             isOneToOne: false
             referencedRelation: "squads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          last_message_at: string | null
+          opportunity_id: string | null
+          participant_one: string
+          participant_two: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          opportunity_id?: string | null
+          participant_one: string
+          participant_two: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          opportunity_id?: string | null
+          participant_one?: string
+          participant_two?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      direct_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          message_type: string | null
+          read_at: string | null
+          sender_id: string
+          voice_note_url: string | null
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          message_type?: string | null
+          read_at?: string | null
+          sender_id: string
+          voice_note_url?: string | null
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          message_type?: string | null
+          read_at?: string | null
+          sender_id?: string
+          voice_note_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
         ]
@@ -220,6 +346,125 @@ export type Database = {
         }
         Relationships: []
       }
+      opportunities: {
+        Row: {
+          category: string | null
+          created_at: string
+          currency: string | null
+          description: string | null
+          district: string | null
+          duration: string | null
+          education_required: string | null
+          employer_id: string
+          facilities: string[] | null
+          id: string
+          latitude: number | null
+          location_text: string | null
+          longitude: number | null
+          opportunity_type: string
+          skills_required: string[] | null
+          slots: number | null
+          start_date: string | null
+          status: string
+          title: string
+          updated_at: string
+          wage_max: number | null
+          wage_min: number | null
+          working_hours: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          district?: string | null
+          duration?: string | null
+          education_required?: string | null
+          employer_id: string
+          facilities?: string[] | null
+          id?: string
+          latitude?: number | null
+          location_text?: string | null
+          longitude?: number | null
+          opportunity_type?: string
+          skills_required?: string[] | null
+          slots?: number | null
+          start_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          wage_max?: number | null
+          wage_min?: number | null
+          working_hours?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          district?: string | null
+          duration?: string | null
+          education_required?: string | null
+          employer_id?: string
+          facilities?: string[] | null
+          id?: string
+          latitude?: number | null
+          location_text?: string | null
+          longitude?: number | null
+          opportunity_type?: string
+          skills_required?: string[] | null
+          slots?: number | null
+          start_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          wage_max?: number | null
+          wage_min?: number | null
+          working_hours?: string | null
+        }
+        Relationships: []
+      }
+      opportunity_matches: {
+        Row: {
+          applied: boolean | null
+          created_at: string
+          id: string
+          match_reasons: string[] | null
+          opportunity_id: string
+          score: number
+          seen: boolean | null
+          user_id: string
+        }
+        Insert: {
+          applied?: boolean | null
+          created_at?: string
+          id?: string
+          match_reasons?: string[] | null
+          opportunity_id: string
+          score?: number
+          seen?: boolean | null
+          user_id: string
+        }
+        Update: {
+          applied?: boolean | null
+          created_at?: string
+          id?: string
+          match_reasons?: string[] | null
+          opportunity_id?: string
+          score?: number
+          seen?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_matches_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       password_reset_tokens: {
         Row: {
           created_at: string
@@ -247,57 +492,168 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_stats: {
+        Row: {
+          created_at: string
+          id: string
+          region: string | null
+          stat_date: string
+          total_applications: number | null
+          total_employers: number | null
+          total_matches: number | null
+          total_opportunities: number | null
+          total_placements: number | null
+          total_youth: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          region?: string | null
+          stat_date?: string
+          total_applications?: number | null
+          total_employers?: number | null
+          total_matches?: number | null
+          total_opportunities?: number | null
+          total_placements?: number | null
+          total_youth?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          region?: string | null
+          stat_date?: string
+          total_applications?: number | null
+          total_employers?: number | null
+          total_matches?: number | null
+          total_opportunities?: number | null
+          total_placements?: number | null
+          total_youth?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
+          age: number | null
           availability: string | null
           bio: string | null
           company: string | null
           contact_info: string | null
           created_at: string
+          district: string | null
+          education_level: string | null
           embedding_synced: boolean | null
+          gender: string | null
           goals: string[] | null
           id: string
           image_url: string | null
+          languages: string[] | null
+          max_commute_km: number | null
           name: string
           niche: string | null
+          persona_type: string | null
+          preferred_hours: string | null
+          preferred_job_types: string[] | null
+          relocation_willing: boolean | null
           skills: string[] | null
           title: string | null
           updated_at: string
           user_id: string
+          village: string | null
         }
         Insert: {
+          age?: number | null
           availability?: string | null
           bio?: string | null
           company?: string | null
           contact_info?: string | null
           created_at?: string
+          district?: string | null
+          education_level?: string | null
           embedding_synced?: boolean | null
+          gender?: string | null
           goals?: string[] | null
           id?: string
           image_url?: string | null
+          languages?: string[] | null
+          max_commute_km?: number | null
           name: string
           niche?: string | null
+          persona_type?: string | null
+          preferred_hours?: string | null
+          preferred_job_types?: string[] | null
+          relocation_willing?: boolean | null
           skills?: string[] | null
           title?: string | null
           updated_at?: string
           user_id: string
+          village?: string | null
         }
         Update: {
+          age?: number | null
           availability?: string | null
           bio?: string | null
           company?: string | null
           contact_info?: string | null
           created_at?: string
+          district?: string | null
+          education_level?: string | null
           embedding_synced?: boolean | null
+          gender?: string | null
           goals?: string[] | null
           id?: string
           image_url?: string | null
+          languages?: string[] | null
+          max_commute_km?: number | null
           name?: string
           niche?: string | null
+          persona_type?: string | null
+          preferred_hours?: string | null
+          preferred_job_types?: string[] | null
+          relocation_willing?: boolean | null
           skills?: string[] | null
           title?: string | null
           updated_at?: string
           user_id?: string
+          village?: string | null
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reported_entity_id: string
+          reported_entity_type: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reported_entity_id: string
+          reported_entity_type: string
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reported_entity_id?: string
+          reported_entity_type?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
         }
         Relationships: []
       }
