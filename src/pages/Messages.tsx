@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useMessaging } from "@/hooks/useMessaging";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -18,6 +19,9 @@ interface Message {
 }
 
 const Messages = () => {
+  // Initialize real-time messaging hook (backend-ready)
+  const { conversations, messages: realMessages, sendMessage: sendRealMessage, fetchMessages: fetchRealMessages } = useMessaging();
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',

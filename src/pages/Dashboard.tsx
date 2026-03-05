@@ -12,6 +12,8 @@ import MilestoneTracker from "@/components/MilestoneTracker";
 import RecommendationCard from "@/components/RecommendationCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useOpportunityMatching } from "@/hooks/useOpportunityMatching";
+import { useApplications } from "@/hooks/useApplications";
 
 // Mock data
 const collaborations = [
@@ -78,6 +80,8 @@ const Dashboard = () => {
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { matches: opportunityMatches, fetchMatches } = useOpportunityMatching();
+  const { getMyApplications } = useApplications();
 
   const fetchAIRecommendations = async () => {
     setLoadingRecommendations(true);
@@ -122,9 +126,11 @@ const Dashboard = () => {
     }
   };
 
-  // Load recommendations when component mounts
+  // Load recommendations and matches when component mounts
   useEffect(() => {
     fetchAIRecommendations();
+    fetchMatches();
+    getMyApplications();
   }, []);
 
   return (
